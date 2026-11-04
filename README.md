@@ -1,15 +1,11 @@
-# Human Body Segmentation
+# 3D Human Mesh Part Segmentation using DiffusionNet
 
 ![Sample meshes with ground-truth body-part labels](assets/samples.png)
 
 ## Overview
-
-This project performs **semantic segmentation of 3D human body meshes**: every triangle of a mesh is assigned to one of eight body parts (head, hand, forearm, upper arm, torso, thigh, shin, foot).
-
-The main difficulty is that the meshes come from several different datasets. They differ in **pose**, **body shape** and **coordinate frame**: depending on the source, a body may stand upright, lie along another axis, or face a different direction. A method that relies on raw `xyz` coordinates has to learn all of these variations. To avoid that, we describe the surface with **intrinsic** features derived from the **Laplace–Beltrami operator** and the **Heat Kernel Signature (HKS)**. These features depend only on the geometry of the surface, not on how the body is placed in space.
+A deep learning pipeline for semantic 3D human mesh segmentation (8 classes) that leverages intrinsic geometric features (Laplace–Beltrami and HKS) to achieve spatial invariance, ensuring robust generalization across diverse poses and datasets.
 
 ## Data
->>>>>>> ba17d69 (laplcian + hks)
 
 We use the human body segmentation benchmark introduced by Maron et al. (2017), in the preprocessed version distributed with MeshCNN (Hanocka et al., 2019). It is stored in `human_seg/`:
 
