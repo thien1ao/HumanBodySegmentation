@@ -20,6 +20,13 @@ The preprocessed human segmentation benchmark from [MeshCNN](https://github.com/
 
 ## Methodology
 
+### Normalization
+
+Each mesh is centered at its area-weighted centroid and scaled to **unit surface area**, $V \leftarrow V / \sqrt{A}$.
+This makes the eigenvalues of different meshes comparable, so one set of diffusion times works for all of them.
+
+### Laplace–Beltrami operator
+
 On a flat grid the Laplacian $\Delta f$ measures how much a value differs from the average of its neighbors.
 The **Laplace–Beltrami operator** is the same idea on a curved surface. On a triangle mesh it is discretized as the
 **cotangent Laplacian**:
@@ -32,22 +39,28 @@ $M_i$ = one third of the area of its adjacent triangles (the "lumped mass matrix
 Only angles and areas appear, and those don't change under rotation, so $L$ is rotation-invariant;
 it also changes very little when the body bends, because bending barely stretches the surface.
 
-**Eigenfunctions.** Solving the generalized eigenproblem
+We build $L$ and $M$ with [`robust_laplacian`](https://github.com/nmwsharp/robust-laplacians-py), which implements
+exactly this discretization and also stays well-behaved on degenerate triangles.
+
+### Eigenfunctions
+
+Solving the generalized eigenproblem
 
 $$ L\,\phi_k = \lambda_k\, M\, \phi_k, \qquad 0 = \lambda_0 \le \lambda_1 \le \dots $$
 
 gives functions $\phi_k$ on the surface that are the mesh's "vibration modes" (a Fourier basis for the surface):
 small $\lambda$ = smooth, large-scale patterns; large $\lambda$ = fine detail.
-With only ~750 vertices we can just do a dense eigendecomposition. We keep the first `K_EIG = 128` modes.
 
-Implementation trick: with $\psi = M^{1/2}\phi$ the problem becomes the ordinary symmetric eigenproblem
-$M^{-1/2} L M^{-1/2}\,\psi = \lambda\,\psi$, which `torch.linalg.eigh` solves directly.
-
-$$
-L\\phi_k = \lambda_k\ M\ \phi_k
-$$
+We compute the first **128** eigenpairs with `scipy.sparse.linalg.eigsh` in shift-invert mode (`sigma` slightly below 0),
+which returns the smallest eigenvalues and $M$-orthonormal eigenfunctions. The constant mode $\phi_0$ ($\lambda_0 = 0$)
+carries no information and is dropped.
 
 ![Laplace–Beltrami eigenfunctions on a body mesh](assets/laplace.png)
+
+*Eigenfunctions on one mesh (red = positive, blue = negative). $\phi_1$ runs from head to feet, $\phi_2$ separates the legs,
+$\phi_3$ isolates an arm; higher modes oscillate faster and capture finer detail.*
+
+### Heat Kernel Signature
 
 Imagine placing a unit of heat at point $x$ and letting it spread over the surface for time $t$.
 **How much heat is still at $x$** depends on the geometry around $x$:
@@ -60,25 +73,36 @@ Using the eigenbasis this has a closed form:
 
 $$ \mathrm{HKS}(x, t) = \sum_k e^{-\lambda_k t}\, \phi_k(x)^2 $$
 
-We evaluate it at 16 logarithmically spaced times, giving a **16-dimensional descriptor per vertex**
-that is rotation-invariant and almost pose-invariant. This is the input of our network.
+Because only $\phi_k^2$ appears, the arbitrary sign of each eigenfunction doesn't matter.
 
-Time range: the classical choice is $t \in [\,4\ln 10/\lambda_{\max},\; 4\ln 10/\lambda_1\,]$.
-Since all meshes have unit area their eigenvalues are comparable, so we use one shared range computed from
-the median eigenvalues over the training set (computed in the next section).
+We evaluate it at **16 logarithmically spaced times** $t \in [0.01,\, 1]$. Since every mesh has unit area, the same times
+are used for all meshes, so channel $j$ means the same thing on every body. Each time slice is normalized by the heat trace
+$\sum_k e^{-\lambda_k t}$ (the "scaled HKS") and log-transformed, so all 16 channels live on a similar numeric scale:
 
-We also normalize each time slice by $\sum_k e^{-\lambda_k t}$ (the "scaled HKS"), and take a log, so
-all 16 channels live on a similar numeric scale.
+$$ \widetilde{\mathrm{HKS}}(x,t) = \log \frac{\mathrm{HKS}(x,t)}{\sum_k e^{-\lambda_k t}} $$
 
-$$
-\mathrm{HKS}(x,t) = \sum_k e^{-\lambda_k t}\ \phi_k(x)^2
-$$
-
+The result is a **16-dimensional descriptor per vertex** that is rotation-invariant and almost pose-invariant.
+This is the input of our network.
 
 ![Heat Kernel Signature at increasing time scales](assets/hks.png)
 
+*HKS at 8 of the 16 time scales (bright = more heat retained). At small $t$ the hands, feet and head already stand out;
+as $t$ grows the signature encodes the distance from the body's center, with the darkest values at the waist.*
 
-**DiffusionNet**:
+### DiffusionNet
+
+DiffusionNet (Sharp et al., 2022) turns heat diffusion into a learnable layer. HKS uses **fixed** times; DiffusionNet
+diffuses learned features with **learned** times. The network is a stack of blocks, each of which:
+
+1. **diffuses** every feature channel $u$ over the surface for its own learned time $t$, computed cheaply in the
+   eigenbasis: $\; u \mapsto \Phi\, \mathrm{diag}(e^{-\lambda t})\, \Phi^{\top} M\, u$
+   (small $t$ = local context, large $t$ = whole-body context);
+2. computes **spatial gradient features**: inner products of surface gradients, which add a sense of direction
+   (along a limb vs. across it) while staying rotation-invariant;
+3. mixes the input, diffused and gradient features with a per-vertex **MLP** and a residual connection.
+
+The network takes the per-vertex HKS as input and outputs 8 class scores per vertex. These are averaged over the three
+vertices of each triangle to give one prediction per face, trained with cross-entropy against the face labels.
 
 ## References
 
