@@ -49,8 +49,6 @@ We compute the first **128 non-trivial eigenpairs** using `scipy.sparse.linalg.e
 
 ### Heat Kernel Signature
 
-## Heat Kernel Signature (HKS)
-
 To capture multi-scale geometric properties, we utilize the **Heat Kernel Signature (HKS)**. 
 
 The **Heat Kernel** $k_t(x, y)$ describes the diffusion of heat across the manifold, representing the transition probability of heat flowing from point $y$ to point $x$ over time $t$. The **Heat Kernel Signature** restricts this kernel to the diagonal ($x = y$), measuring the local heat retention at each point:
@@ -58,15 +56,12 @@ The **Heat Kernel** $k_t(x, y)$ describes the diffusion of heat across the manif
 * **Short time scales ($t \to 0$):** Characterize fine local geometry and high-frequency surface details.
 * **Large time scales ($t \to \infty$):** Encode global structural context and macro-topology (e.g., relative position within the entire body).
 
-### Spectral Formulation
 
 Using the precomputed Laplace–Beltrami eigenbasis, the heat kernel admits a closed-form spectral expansion, simplifying the HKS to:
 
 $$\text{HKS}(x, t) = k_t(x, x) = \sum_k e^{-\lambda_k t} \phi_k(x)^2$$
 
 Because the formulation relies on squared eigenfunctions ($\phi_k^2$), it is naturally invariant to the sign ambiguity inherent in eigenvalue decomposition.
-
-### Normalization & Scaling
 
 We evaluate the signature across **16 logarithmically spaced time steps** $t \in [0.01, 1]$. Since all meshes are normalized to unit surface area, each time channel corresponds to consistent geometric scales across diverse body shapes. 
 
