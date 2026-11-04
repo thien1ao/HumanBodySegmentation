@@ -35,7 +35,7 @@ Because this formulation depends strictly on local angles and areas, $L$ is inhe
 
 We construct $L$ and $M$ using [`robust_laplacian`](https://github.com/nmwsharp/robust-laplacians-py), which guarantees numerical stability even when handling degenerate triangles.
 
-## Eigenfunctions
+### Eigenfunctions
 
 Solving the generalized eigenproblem:
 
@@ -48,14 +48,6 @@ We compute the first **128 non-trivial eigenpairs** using `scipy.sparse.linalg.e
 ![Laplace–Beltrami eigenfunctions on a body mesh](assets/laplace.png)
 
 ### Heat Kernel Signature
-
-To capture multi-scale geometric properties, we utilize the **Heat Kernel Signature (HKS)**. 
-
-The **Heat Kernel** $k_t(x, y)$ describes the diffusion of heat across the manifold, representing the transition probability of heat flowing from point $y$ to point $x$ over time $t$. The **Heat Kernel Signature** restricts this kernel to the diagonal ($x = y$), measuring the local heat retention at each point:
-
-* **Short time scales ($t \to 0$):** Characterize fine local geometry and high-frequency surface details.
-* **Large time scales ($t \to \infty$):** Encode global structural context and macro-topology (e.g., relative position within the entire body).
-
 
 Using the precomputed Laplace–Beltrami eigenbasis, the heat kernel admits a closed-form spectral expansion, simplifying the HKS to:
 
