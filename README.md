@@ -20,7 +20,28 @@ The preprocessed human segmentation benchmark from [MeshCNN](https://github.com/
 
 ## Methodology
 
-**Laplace–Beltrami operator**:
+On a flat grid the Laplacian $\Delta f$ measures how much a value differs from the average of its neighbors.
+The **Laplace–Beltrami operator** is the same idea on a curved surface. On a triangle mesh it is discretized as the
+**cotangent Laplacian**:
+
+$$ (L f)_i = \sum_{j \in N(i)} w_{ij}\,(f_i - f_j), \qquad w_{ij} = \tfrac12(\cot\alpha_{ij} + \cot\beta_{ij}) $$
+
+where $\alpha_{ij}, \beta_{ij}$ are the two angles opposite the edge $(i,j)$. Each vertex also gets a **mass**
+$M_i$ = one third of the area of its adjacent triangles (the "lumped mass matrix").
+
+Only angles and areas appear, and those don't change under rotation, so $L$ is rotation-invariant;
+it also changes very little when the body bends, because bending barely stretches the surface.
+
+**Eigenfunctions.** Solving the generalized eigenproblem
+
+$$ L\,\phi_k = \lambda_k\, M\, \phi_k, \qquad 0 = \lambda_0 \le \lambda_1 \le \dots $$
+
+gives functions $\phi_k$ on the surface that are the mesh's "vibration modes" (a Fourier basis for the surface):
+small $\lambda$ = smooth, large-scale patterns; large $\lambda$ = fine detail.
+With only ~750 vertices we can just do a dense eigendecomposition. We keep the first `K_EIG = 128` modes.
+
+Implementation trick: with $\psi = M^{1/2}\phi$ the problem becomes the ordinary symmetric eigenproblem
+$M^{-1/2} L M^{-1/2}\,\psi = \lambda\,\psi$, which `torch.linalg.eigh` solves directly.
 
 $$
 L\\phi_k = \lambda_k\ M\ \phi_k
