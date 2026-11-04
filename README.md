@@ -49,31 +49,28 @@ We compute the first **128 non-trivial eigenpairs** using `scipy.sparse.linalg.e
 
 ### Heat Kernel Signature
 
-Imagine placing a unit of heat at point $x$ and letting it spread over the surface for time $t$.
-**How much heat is still at $x$** depends on the geometry around $x$:
+## Heat Kernel Signature (HKS)
 
-* at the tip of a hand or foot heat can only flow one way → it stays → **high** value;
-* in the middle of the torso heat escapes in all directions → **low** value.
+To capture multi-scale geometric properties, we utilize the **Heat Kernel Signature (HKS)**. Conceptually, if we place a unit of heat at a surface point $x$ and let it diffuse for time $t$, the amount of heat remaining at $x$ reflects the surrounding geometry:
+* **At extremities** (e.g., fingertips or toes), heat flow is highly constrained, leading to high heat retention[cite: 6].
+* **In open regions** (e.g., the torso), heat dissipates freely in all directions, resulting in low heat retention[cite: 6].
 
-Small $t$ describes local shape; large $t$ describes the position within the whole body (tip of a limb vs. center).
-Using the eigenbasis this has a closed form:
+* **Multi-Scale Analysis:** Small values of $t$ encode fine local shape features, whereas larger values capture global structural context within the body (such as limb tips versus the central mass)[cite: 6].
+* **Spectral Formulation:** Leveraging the precomputed eigenbasis, the HKS has a closed-form expression[cite: 6]:
 
-```math
-\mathrm{HKS}(x, t) = \sum_k e^{-\lambda_k t}\ \phi_k(x)^2
-```
+$$\text{HKS}(x, t) = \sum_k e^{-\lambda_k t} \phi_k(x)^2$$
 
-Because only $\phi_k^2$ appears, the arbitrary sign of each eigenfunction doesn't matter. 
+Because the formulation relies on squared eigenfunctions ($\phi_k^2$), the arbitrary sign ambiguity inherent to eigenvalue decomposition is naturally eliminated[cite: 6].
 
-We evaluate it at **16 logarithmically spaced times** $`t \in [0.01, 1]`$. Since every mesh has unit area, the same times
-are used for all meshes, so channel $j$ means the same thing on every body. Each time slice is normalized by the heat trace
-$\sum_k e^{-\lambda_k t}$ (the "scaled HKS") and log-transformed, so all 16 channels live on a similar numeric scale:
+### Normalization & Feature Extraction
 
-```math
-\widetilde{\mathrm{HKS}}(x,t) = \log \frac{\mathrm{HKS}(x,t)}{\sum_k e^{-\lambda_k t}}
-```
+We evaluate the signature across **16 logarithmically spaced time steps** $t \in [0.01, 1]$[cite: 6]. Because all meshes are normalized to unit surface area, each time channel maintains a consistent semantic meaning across diverse body shapes[cite: 6]. 
 
-The result is a **16-dimensional descriptor per vertex** that is rotation-invariant and almost pose-invariant.
-This is the input of our network.
+To stabilize numerical ranges across channels, each time slice is normalized by the total heat trace ($\sum_k e^{-\lambda_k t}$) and log-transformed[cite: 6]:
+
+$$\widetilde{\text{HKS}}(x, t) = \log \frac{\text{HKS}(x, t)}{\sum_k e^{-\lambda_k t}}$$
+
+The final output is a robust **16-dimensional per-vertex descriptor** that is strictly rotation-invariant and highly resilient to articulation, serving as the core input feature for our network[cite: 6].
 
 ![Heat Kernel Signature at increasing time scales](assets/hks.png)
 
