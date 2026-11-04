@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# Human Body Segmenatation
-=======
 # Human Body Segmentation
 
 ![Sample meshes with ground-truth body-part labels](assets/samples.png)
