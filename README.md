@@ -1,4 +1,4 @@
-# Human Segmentation using DiffusionNet
+# Human Mesh Segmentation using DiffusionNet
 
 ## Overview
 
