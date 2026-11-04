@@ -8,13 +8,17 @@ A deep learning pipeline for semantic 3D human mesh segmentation (8 classes) tha
 
 ## Data
 
-| Split | Source | Meshes | Description |
-|-------|--------|-------:|-------------|
-| train | **MIT animation** (Vlasic et al., 2008) | 169 | Frames of captured motion sequences; many poses of a few subjects |
-| train | **FAUST** (Bogo et al., 2014) | 100 | Registered 3D scans of 10 people in 10 poses |
-| train | **SCAPE** (Anguelov et al., 2005) | 71 | One subject in many poses |
-| train | **Adobe Fuse** | 41 | Synthetic characters with varied body shapes |
-| test  | **SHREC'07** (Giorgi et al., 2007) | 18 | Human models from the SHREC'07 watertight track |
+## Dataset
+
+The dataset was downloaded from [this Dropbox link](https://www.dropbox.com/scl/fi/r04ahap6vhuwzkjj9mpwk/human_seg.tar.gz?rlkey=dyjwx6ehxmarvtrzl6atvs9mz&e=1).
+
+| Split | Source |
+|-------|--------|
+| train | **MIT animation** (Vlasic et al., 2008) |
+| train | **FAUST** (Bogo et al., 2014) |
+| train | **SCAPE** (Anguelov et al., 2005) |
+| train | **Adobe Fuse** |
+| test | **SHREC'07** (Giorgi et al., 2007) |
 
 ### Labels
 
