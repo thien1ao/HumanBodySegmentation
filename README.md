@@ -8,20 +8,6 @@ A deep learning pipeline for semantic 3D human mesh segmentation (8 classes) tha
 
 ## Data
 
-We use the human body segmentation benchmark introduced by Maron et al. (2017), in the preprocessed version distributed with MeshCNN (Hanocka et al., 2019). It is stored in `human_seg/`:
-
-```
-human_seg/
-├── train/   381 meshes (.obj)
-├── test/     18 meshes (.obj)
-├── seg/     hard labels, one class per edge (.eseg)
-└── sseg/    soft labels, 8 class probabilities per edge (.seseg)
-```
-
-### Sources
-
-The training and test sets come from different datasets, so the test set measures generalization to unseen subjects and modeling styles.
-
 | Split | Source | Meshes | Description |
 |-------|--------|-------:|-------------|
 | train | **MIT animation** (Vlasic et al., 2008) | 169 | Frames of captured motion sequences; many poses of a few subjects |
@@ -29,15 +15,6 @@ The training and test sets come from different datasets, so the test set measure
 | train | **SCAPE** (Anguelov et al., 2005) | 71 | One subject in many poses |
 | train | **Adobe Fuse** | 41 | Synthetic characters with varied body shapes |
 | test  | **SHREC'07** (Giorgi et al., 2007) | 18 | Human models from the SHREC'07 watertight track |
-
-Each source uses its own coordinate frame, so the orientation of the body is not consistent across the dataset.
-
-### Mesh format
-
-All meshes were remeshed to the same resolution:
-
-- **752 vertices, 1500 triangles, 2250 edges**
-- closed, genus-0 surfaces (`V − E + F = 2`)
 
 ### Labels
 
