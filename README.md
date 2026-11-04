@@ -49,7 +49,26 @@ $$
 
 ![Laplace–Beltrami eigenfunctions on a body mesh](assets/laplace.png)
 
-**Heat Kernel Signature**:
+Imagine placing a unit of heat at point $x$ and letting it spread over the surface for time $t$.
+**How much heat is still at $x$** depends on the geometry around $x$:
+
+* at the tip of a hand or foot heat can only flow one way → it stays → **high** value;
+* in the middle of the torso heat escapes in all directions → **low** value.
+
+Small $t$ describes local shape; large $t$ describes the position within the whole body (tip of a limb vs. center).
+Using the eigenbasis this has a closed form:
+
+$$ \mathrm{HKS}(x, t) = \sum_k e^{-\lambda_k t}\, \phi_k(x)^2 $$
+
+We evaluate it at 16 logarithmically spaced times, giving a **16-dimensional descriptor per vertex**
+that is rotation-invariant and almost pose-invariant. This is the input of our network.
+
+Time range: the classical choice is $t \in [\,4\ln 10/\lambda_{\max},\; 4\ln 10/\lambda_1\,]$.
+Since all meshes have unit area their eigenvalues are comparable, so we use one shared range computed from
+the median eigenvalues over the training set (computed in the next section).
+
+We also normalize each time slice by $\sum_k e^{-\lambda_k t}$ (the "scaled HKS"), and take a log, so
+all 16 channels live on a similar numeric scale.
 
 $$
 \mathrm{HKS}(x,t) = \sum_k e^{-\lambda_k t}\ \phi_k(x)^2
