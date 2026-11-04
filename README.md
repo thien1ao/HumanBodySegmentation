@@ -6,16 +6,6 @@ A deep learning pipeline for semantic 3D human mesh segmentation (8 classes) tha
 
 ![Sample meshes with ground-truth body-part labels](assets/samples.png)
 
-## Pipeline
-
-```
-mesh (.obj) ──► normalize ──► Laplace–Beltrami ──► Heat Kernel ──► DiffusionNet ──► label
-                (center,       eigenbasis          Signature                       per face
-                 unit area)    (λ, Φ)              (16 scales)
-```
-
-The meshes come from five datasets, and each one uses its own pose, body shape and coordinate frame. Instead of raw `xyz` coordinates, every step works with **intrinsic** geometry: quantities measured along the surface. These quantities don't change when a body is rotated, moved or rescaled, and they barely change when it moves into another pose.
-
 ## Dataset
 
 The preprocessed human segmentation benchmark from [MeshCNN](https://github.com/ranahanocka/MeshCNN) ([download](https://www.dropbox.com/scl/fi/r04ahap6vhuwzkjj9mpwk/human_seg.tar.gz?rlkey=dyjwx6ehxmarvtrzl6atvs9mz&e=1)), extracted to `human_seg/`.
@@ -27,14 +17,6 @@ The preprocessed human segmentation benchmark from [MeshCNN](https://github.com/
 | train | SCAPE (Anguelov et al., 2005) | 71 |
 | train | Adobe Fuse | 41 |
 | test  | SHREC'07 (Giorgi et al., 2007) | 18 |
-
-Every mesh has **752 vertices and 1500 faces**. The labels are stored **per edge** (`seg/*.eseg`). We convert them to **per face** by majority vote over each triangle's three edges.
-
-| head | hand | forearm | upper arm | torso | thigh | shin | foot |
-|:----:|:----:|:-------:|:---------:|:-----:|:-----:|:----:|:----:|
-| 7.1 % | 4.9 % | 7.3 % | 8.7 % | 31.3 % | 16.2 % | 15.5 % | 9.1 % |
-
-The classes are imbalanced: the torso covers almost a third of the surface, the hands less than 5 %. The labels don't separate left from right.
 
 ## Methodology
 
