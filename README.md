@@ -52,7 +52,7 @@ L\,\phi_k = \lambda_k\, M\,\phi_k, \qquad 0 = \lambda_0 \le \lambda_1 \le \dots
 
 gives the mesh's spectral basis, a Fourier basis for the surface: low eigenvalues describe large-scale patterns, while high eigenvalues capture finer details.
 
-We compute the first **128** eigenpairs with `scipy.sparse.linalg.eigsh` in shift-invert mode and discard the constant eigenfunction \phi_0.
+We compute the first **128** eigenpairs with `scipy.sparse.linalg.eigsh` in shift-invert mode and discard the constant eigenfunction.
 
 ![Laplace–Beltrami eigenfunctions on a body mesh](assets/laplace.png)
 
