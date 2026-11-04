@@ -18,13 +18,7 @@ The preprocessed human segmentation benchmark from [MeshCNN](https://github.com/
 | train | Adobe Fuse | 41 |
 | test  | SHREC'07 (Giorgi et al., 2007) | 18 |
 
-Every mesh has **752 vertices and 1500 triangles**. Labels are given per edge (`seg/*.eseg`, 8 classes: head, hand, forearm, upper arm, torso, thigh, shin, foot) and converted to per-face labels by majority vote over each triangle's three edges. The test set comes from a different source than all training sets, so it measures generalization to unseen subjects.
-
 ## Methodology
-
-```
-mesh ──► normalize ──► Laplace–Beltrami ──► eigenbasis ──► HKS ──► DiffusionNet ──► label per face
-```
 
 ### Normalization
 
@@ -58,11 +52,9 @@ L\,\phi_k = \lambda_k\, M\,\phi_k, \qquad 0 = \lambda_0 \le \lambda_1 \le \dots
 
 gives the mesh's spectral basis, a Fourier basis for the surface: low eigenvalues describe large-scale patterns, while high eigenvalues capture finer details.
 
-We compute the first **128** eigenpairs with `scipy.sparse.linalg.eigsh` in shift-invert mode and discard the constant eigenfunction $\phi_0$.
+We compute the first **128** eigenpairs with `scipy.sparse.linalg.eigsh` in shift-invert mode and discard the constant eigenfunction \phi_0.
 
 ![Laplace–Beltrami eigenfunctions on a body mesh](assets/laplace.png)
-
-*Eigenfunctions on one mesh (red = positive, blue = negative): $\phi_1$ runs from head to feet, $\phi_2$ separates the legs, higher modes capture finer detail.*
 
 ### Heat Kernel Signature
 
@@ -76,7 +68,7 @@ Small $t$ describes local shape; large $t$ describes the position within the who
 Using the eigenbasis this has a closed form:
 
 ```math
-\mathrm{HKS}(x, t) = \sum_k e^{-\lambda_k t}\, \phi_k(x)^2
+\mathrm{HKS}(x, t) = \sum_k e^{-\lambda_k t}\ \phi_k(x)^2
 ```
 
 Because only $\phi_k^2$ appears, the arbitrary sign of each eigenfunction doesn't matter. 
@@ -93,8 +85,6 @@ The result is a **16-dimensional descriptor per vertex** that is rotation-invari
 This is the input of our network.
 
 ![Heat Kernel Signature at increasing time scales](assets/hks.png)
-
-*HKS at increasing $t$ (bright = more heat retained): hands, feet and head stand out at small $t$; at large $t$ the signature encodes distance from the body's center.*
 
 ### DiffusionNet
 
