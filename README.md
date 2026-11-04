@@ -43,7 +43,7 @@ $$L \phi_k = \lambda_k M \phi_k, \quad 0 = \lambda_0 \le \lambda_1 \le \dots$$
 
 yields the mesh's spectral basis—acting as a generalized Fourier basis for non-Euclidean surfaces. Low eigenvalues capture global, large-scale structural patterns, while higher eigenvalues encode fine-grained geometric details.
 
-We compute the first **128 non-trivial eigenpairs** using `scipy.sparse.linalg.eigsh` in shift-invert mode, discarding the constant zero-eigenfunction ($\phi_0$).
+We compute the first **128 non-trivial eigenpairs** using `scipy.sparse.linalg.eigsh` in shift-invert mode, discarding the constant zero-eigenfunction.
 
 ![Laplace–Beltrami eigenfunctions on a body mesh](assets/laplace.png)
 
