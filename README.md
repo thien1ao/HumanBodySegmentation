@@ -1,9 +1,10 @@
 # 3D Human Mesh Part Segmentation using DiffusionNet
 
-![Sample meshes with ground-truth body-part labels](assets/samples.png)
-
 ## Overview
 A deep learning pipeline for semantic 3D human mesh segmentation (8 classes) that leverages intrinsic geometric features (Laplace–Beltrami and HKS) to achieve spatial invariance, ensuring robust generalization across diverse poses and datasets.
+
+![Sample meshes with ground-truth body-part labels](assets/samples.png)
+
 
 ## Data
 
