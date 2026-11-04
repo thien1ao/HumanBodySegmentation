@@ -2,7 +2,7 @@
 
 ## Overview
 
-A deep learning pipeline for semantic 3D human mesh segmentation (8 classes) that leverages intrinsic geometric features (Laplace–Beltrami and HKS) to achieve spatial invariance, ensuring robust generalization across diverse poses and datasets.
+A deep learning pipeline for semantic 3D human mesh segmentation (8 classes) that leverages intrinsic geometric features to achieve spatial invariance and robust generalization across different mesh poses and orientations.
 
 ![Sample meshes with ground-truth body-part labels](assets/samples.png)
 
