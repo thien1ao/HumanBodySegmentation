@@ -20,12 +20,19 @@ The preprocessed human segmentation benchmark from [MeshCNN](https://github.com/
 
 ## Methodology
 
-### Normalization
+**Laplace–Beltrami operator** generalizes the Laplacian to curved surfaces. On triangle meshes, we discretize it using the cotangent Laplacian:
 
-Each mesh is centered at its area-weighted centroid and scaled to **unit surface area**, $V \leftarrow V / \sqrt{A}$.
-This makes the eigenvalues of different meshes comparable, so one set of diffusion times works for all of them.
+$$
+(Lf)i = \sum{j \in N(i)} w_{ij}(f_i-f_j),
+\qquad
+w_{ij} = \frac{1}{2}(\cot\alpha_{ij}+\cot\beta_{ij})
+$$
 
-### Laplace–Beltrami operator
+where $\alpha_{ij}$ and $\beta_{ij}$ are the angles opposite edge $(i,j)$. A lumped mass matrix $M$ is constructed using one third of each adjacent triangle's area.
+
+Since angles and areas are rotation-invariant, this discretization is also rotation-invariant and largely insensitive to bending.
+
+We compute $L$ and $M$ using [`robust_laplacian`](https://github.com/nmwsharp/robust-laplacians-py)
 
 On a flat grid the Laplacian $\Delta f$ measures how much a value differs from the average of its neighbors.
 The **Laplace–Beltrami operator** is the same idea on a curved surface. On a triangle mesh it is discretized as the
