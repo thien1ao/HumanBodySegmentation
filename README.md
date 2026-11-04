@@ -48,9 +48,6 @@ We compute the first **128** eigenpairs with `scipy.sparse.linalg.eigsh`, in shi
 
 ![Laplace–Beltrami eigenfunctions on a body mesh](assets/laplace.png)
 
-*Eigenfunctions on one mesh (red = positive, blue = negative). $\phi_1$ runs from head to feet, $\phi_2$ separates the legs,
-$\phi_3$ isolates an arm; higher modes oscillate faster and capture finer detail.*
-
 ### Heat Kernel Signature
 
 Imagine placing a unit of heat at point $x$ and letting it spread over the surface for time $t$.
@@ -64,7 +61,18 @@ Using the eigenbasis this has a closed form:
 
 $$ \mathrm{HKS}(x, t) = \sum_k e^{-\lambda_k t}\, \phi_k(x)^2 $$
 
-Because only $\phi_k^2$ appears, the arbitrary sign of each eigenfunction doesn't matter.
+Because only $\phi_k^2$ appears, the arbitrary sign of each eigenfunction doesn't matter. 
+
+We evaluate it at **16 logarithmically spaced times** $t \in [0.01,\, 1]$. Since every mesh has unit area, the same times
+are used for all meshes, so channel $j$ means the same thing on every body. Each time slice is normalized by the heat trace
+$\sum_k e^{-\lambda_k t}$ (the "scaled HKS") and log-transformed, so all 16 channels live on a similar numeric scale:
+
+$$ \widetilde{\mathrm{HKS}}(x,t) = \log \frac{\mathrm{HKS}(x,t)}{\sum_k e^{-\lambda_k t}} $$
+
+The result is a **16-dimensional descriptor per vertex** that is rotation-invariant and almost pose-invariant.
+This is the input of our network.
+
+![Heat Kernel Signature at increasing time scales](assets/hks.png)
 
 
 ### DiffusionNet
