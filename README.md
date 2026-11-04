@@ -31,7 +31,7 @@ On a flat grid the Laplacian $\Delta f$ measures how much a value differs from t
 The **Laplace–Beltrami operator** is the same idea on a curved surface. On a triangle mesh it is discretized as the
 **cotangent Laplacian**:
 
-$$ (L f)_i = \sum_{j \in N(i)} w_{ij}\,(f_i - f_j), \qquad w_{ij} = \tfrac12(\cot\alpha_{ij} + \cot\beta_{ij}) $$
+$$ (L f)_i = \sum_{j \in N(i)} w_{ij}\ (f_i - f_j), \qquad w_{ij} = \tfrac12(\cot\alpha_{ij} + \cot\beta_{ij}) $$
 
 where $\alpha_{ij}, \beta_{ij}$ are the two angles opposite the edge $(i,j)$. Each vertex also gets a **mass**
 $M_i$ = one third of the area of its adjacent triangles (the "lumped mass matrix").
@@ -46,7 +46,7 @@ exactly this discretization and also stays well-behaved on degenerate triangles.
 
 Solving the generalized eigenproblem
 
-$$ L\,\phi_k = \lambda_k\, M\, \phi_k, \qquad 0 = \lambda_0 \le \lambda_1 \le \dots $$
+$$ L\,\phi_k = \lambda_k\ M\ \phi_k \qquad 0 = \lambda_0 \le \lambda_1 \le \dots $$
 
 gives functions $\phi_k$ on the surface that are the mesh's "vibration modes" (a Fourier basis for the surface):
 small $\lambda$ = smooth, large-scale patterns; large $\lambda$ = fine detail.
@@ -57,8 +57,8 @@ carries no information and is dropped.
 
 ![Laplace–Beltrami eigenfunctions on a body mesh](assets/laplace.png)
 
-*Eigenfunctions on one mesh (red = positive, blue = negative). $\phi_1$ runs from head to feet, $\phi_2$ separates the legs,
-$\phi_3$ isolates an arm; higher modes oscillate faster and capture finer detail.*
+*Eigenfunctions on one mesh (red = positive, blue = negative). $$\phi_1$$ runs from head to feet, $$\phi_2$$ separates the legs,
+$$\phi_3$$ isolates an arm; higher modes oscillate faster and capture finer detail.*
 
 ### Heat Kernel Signature
 
@@ -68,10 +68,10 @@ Imagine placing a unit of heat at point $x$ and letting it spread over the surfa
 * at the tip of a hand or foot heat can only flow one way → it stays → **high** value;
 * in the middle of the torso heat escapes in all directions → **low** value.
 
-Small $t$ describes local shape; large $t$ describes the position within the whole body (tip of a limb vs. center).
+Small $t$ describes local shape; large $$t$$ describes the position within the whole body (tip of a limb vs. center).
 Using the eigenbasis this has a closed form:
 
-$$ \mathrm{HKS}(x, t) = \sum_k e^{-\lambda_k t}\, \phi_k(x)^2 $$
+$$ \mathrm{HKS}(x, t) = \sum_k e^{-\lambda_k t}\ \phi_k(x)^2 $$
 
 Because only $\phi_k^2$ appears, the arbitrary sign of each eigenfunction doesn't matter.
 
