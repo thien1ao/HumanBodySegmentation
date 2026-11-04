@@ -23,35 +23,27 @@ The preprocessed human segmentation benchmark from [MeshCNN](https://github.com/
 
 Each mesh is centered at its area-weighted centroid and scaled to **unit surface area** ($`V \leftarrow V / \sqrt{A}`$). This makes eigenvalues comparable across meshes, so the same diffusion times can be used for all of them.
 
-### Laplace–Beltrami operator
+### Laplace–Beltrami Operator
 
-On a flat grid the Laplacian $\Delta f$ measures how much a value differs from the average of its neighbors.
-The **Laplace–Beltrami operator** is the same idea on a curved surface. On a triangle mesh it is discretized as the
-**cotangent Laplacian**:
+While the standard Laplacian $\Delta f$ measures local deviation from neighboring values on a flat grid, the **Laplace–Beltrami operator** extends this concept to arbitrary curved surfaces. On discrete triangle meshes, we use the standard cotangent discretization:
 
-```math
-(L f)_i = \sum_{j \in N(i)} w_{ij}\,(f_i - f_j), \qquad w_{ij} = \tfrac12(\cot\alpha_{ij} + \cot\beta_{ij})
-```
+$$(Lf)_i = \sum_{j \in N(i)} w_{ij}(f_i - f_j), \quad w_{ij} = \frac{1}{2}(\cot \alpha_{ij} + \cot \beta_{ij})$$
 
-where $\alpha_{ij}, \beta_{ij}$ are the two angles opposite the edge $(i,j)$. Each vertex also gets a **mass**
-$M_i$ equal to one third of the area of its adjacent triangles (lumped mass matrix).
+where $\alpha_{ij}$ and $\beta_{ij}$ are the angles opposite edge $(i,j)$. To complete the operator, a lumped mass matrix $M$ is constructed, assigning each vertex a weight equal to one-third of the combined area of its adjacent triangles.
 
-Only angles and areas appear, so $L$ is invariant to rotation and translation, and it barely changes when the body bends, because bending hardly stretches the surface.
+Because this formulation depends strictly on local angles and areas, $L$ is inherently invariant to rigid transformations (rotation and translation) and highly robust to isometric deformations such as body bending, which preserve surface metrics.
 
-We build $L$ and $M$ with [`robust_laplacian`](https://github.com/nmwsharp/robust-laplacians-py), which implements
-exactly this discretization and also stays well-behaved on degenerate triangles.
+We construct $L$ and $M$ using [`robust_laplacian`](https://github.com/nmwsharp/robust-laplacians-py), which guarantees numerical stability even when handling degenerate triangles.
 
-### Eigenfunctions
+## Eigenfunctions
 
-Solving the generalized eigenproblem
+Solving the generalized eigenproblem:
 
-```math
-L\,\phi_k = \lambda_k\, M\,\phi_k, \qquad 0 = \lambda_0 \le \lambda_1 \le \dots
-```
+$$L \phi_k = \lambda_k M \phi_k, \quad 0 = \lambda_0 \le \lambda_1 \le \dots$$
 
-gives the mesh's spectral basis, a Fourier basis for the surface: low eigenvalues describe large-scale patterns, while high eigenvalues capture finer details.
+yields the mesh's spectral basis—acting as a generalized Fourier basis for non-Euclidean surfaces. Low eigenvalues capture global, large-scale structural patterns, while higher eigenvalues encode fine-grained geometric details.
 
-We compute the first **128** eigenpairs with `scipy.sparse.linalg.eigsh` in shift-invert mode and discard the constant eigenfunction.
+We compute the first **128 non-trivial eigenpairs** using `scipy.sparse.linalg.eigsh` in shift-invert mode, discarding the constant zero-eigenfunction ($\phi_0$).
 
 ![Laplace–Beltrami eigenfunctions on a body mesh](assets/laplace.png)
 
