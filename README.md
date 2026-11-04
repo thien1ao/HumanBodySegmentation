@@ -22,45 +22,23 @@ The preprocessed human segmentation benchmark from [MeshCNN](https://github.com/
 
 **Laplace–Beltrami operator** generalizes the Laplacian to curved surfaces. On triangle meshes, we discretize it using the cotangent Laplacian:
 
-$$
-(Lf)i = \sum{j \in N(i)} w_{ij}(f_i-f_j),
-\qquad
-w_{ij} = \frac{1}{2}(\cot\alpha_{ij}+\cot\beta_{ij})
-$$
+$$ (L f)_i = \sum_{j \in N(i)} w_{ij}\ (f_i - f_j) \qquad w_{ij} = \tfrac12(\cot\alpha_{ij} + \cot\beta_{ij}) $$
 
 where $\alpha_{ij}$ and $\beta_{ij}$ are the angles opposite edge $(i,j)$. A lumped mass matrix $M$ is constructed using one third of each adjacent triangle's area.
 
 Since angles and areas are rotation-invariant, this discretization is also rotation-invariant and largely insensitive to bending.
 
-We compute $L$ and $M$ using [`robust_laplacian`](https://github.com/nmwsharp/robust-laplacians-py)
-
-On a flat grid the Laplacian $\Delta f$ measures how much a value differs from the average of its neighbors.
-The **Laplace–Beltrami operator** is the same idea on a curved surface. On a triangle mesh it is discretized as the
-**cotangent Laplacian**:
-
-$$ (L f)_i = \sum_{j \in N(i)} w_{ij}\ (f_i - f_j), \qquad w_{ij} = \tfrac12(\cot\alpha_{ij} + \cot\beta_{ij}) $$
-
-where $\alpha_{ij}, \beta_{ij}$ are the two angles opposite the edge $(i,j)$. Each vertex also gets a **mass**
-$M_i$ = one third of the area of its adjacent triangles (the "lumped mass matrix").
-
-Only angles and areas appear, and those don't change under rotation, so $L$ is rotation-invariant;
-it also changes very little when the body bends, because bending barely stretches the surface.
-
-We build $L$ and $M$ with [`robust_laplacian`](https://github.com/nmwsharp/robust-laplacians-py), which implements
-exactly this discretization and also stays well-behaved on degenerate triangles.
+We compute $L$ and $M$ using [`robust_laplacian`](https://github.com/nmwsharp/robust-laplacians-py).
 
 ### Eigenfunctions
 
-Solving the generalized eigenproblem
+The generalized eigenproblem
 
 $$ L\,\phi_k = \lambda_k\ M\ \phi_k \qquad 0 = \lambda_0 \le \lambda_1 \le \dots $$
 
-gives functions $\phi_k$ on the surface that are the mesh's "vibration modes" (a Fourier basis for the surface):
-small $\lambda$ = smooth, large-scale patterns; large $\lambda$ = fine detail.
+produces the mesh's spectral basis, analogous to Fourier modes: low eigenvalues describe large-scale patterns, while high eigenvalues capture finer details.
 
-We compute the first **128** eigenpairs with `scipy.sparse.linalg.eigsh` in shift-invert mode (`sigma` slightly below 0),
-which returns the smallest eigenvalues and $M$-orthonormal eigenfunctions. The constant mode $\phi_0$ ($\lambda_0 = 0$)
-carries no information and is dropped.
+We compute the first 128 eigenpairs using `scipy.sparse.linalg.eigsh` in shift-invert mode and discard the constant eigenfunction $\phi_0$.
 
 ![Laplace–Beltrami eigenfunctions on a body mesh](assets/laplace.png)
 
