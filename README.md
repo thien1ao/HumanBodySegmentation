@@ -9,7 +9,7 @@ A deep learning pipeline for semantic human mesh segmentation (8 classes) that l
 
 ### Normalization
 
-Each mesh is centered at its area-weighted centroid and scaled to **unit surface area** ($`V \leftarrow V / \sqrt{A}`$). This makes eigenvalues comparable across meshes, so the same diffusion times can be used for all of them.
+Each mesh is centered and normalized to unit surface area. This removes differences in translation and scale, making the Laplacian eigenvalues more comparable across meshes.
 
 ### Laplace–Beltrami Operator
 
