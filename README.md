@@ -20,53 +20,25 @@ The preprocessed human segmentation benchmark from [MeshCNN](https://github.com/
 
 ## Methodology
 
-**Normalization.** Each mesh is centered at its area-weighted centroid and scaled to unit surface area, `V ← V / √A`. After this, the spectra of different meshes can be compared directly.
-
-**Laplace–Beltrami operator.** We build the cotangent Laplacian `L` and the mass matrix `M` with `robust_laplacian`, then solve for the first 128 eigenpairs:
+**Laplace–Beltrami operator**:
 
 $$
-L\,\phi_k = \lambda_k\, M\,\phi_k
+L\\phi_k = \lambda_k\ M\ \phi_k
 $$
-
-The eigenfunctions `φ_k` are the surface version of Fourier modes: low `k` gives smooth variation over the whole body, high `k` gives fine detail.
 
 ![Laplace–Beltrami eigenfunctions on a body mesh](assets/laplace.png)
 
-*Eigenfunctions of the Laplace–Beltrami operator (red = positive, blue = negative). The first modes follow the body's structure: φ₁ runs from head to feet, φ₂ separates the two legs, and φ₃ isolates an arm. Higher modes oscillate faster and capture finer detail.*
-
-**Heat Kernel Signature.** For each vertex, HKS measures how much heat stays at that vertex after time `t`:
+**Heat Kernel Signature**:
 
 $$
-\mathrm{HKS}(x,t) = \sum_k e^{-\lambda_k t}\,\phi_k(x)^2
+\mathrm{HKS}(x,t) = \sum_k e^{-\lambda_k t}\ \phi_k(x)^2
 $$
 
-Small `t` captures local shape, such as fingertips, toes and the head. Large `t` captures the vertex's position within the whole body. We use 16 log-spaced times in `[0.01, 1]`, normalize each by the heat trace and take the log. The result is a 16-dimensional descriptor per vertex.
 
 ![Heat Kernel Signature at increasing time scales](assets/hks.png)
 
-*HKS at 8 of the 16 time scales (bright = more heat retained). At small `t`, the extremities (hands, feet, head) already stand out from the rest of the body. As `t` grows, heat spreads over the whole body, and the signature increasingly encodes how far a point is from the body's center, with the darkest values at the waist.*
 
-**DiffusionNet.** The network (Sharp et al., 2022) stacks blocks that each:
-1. **diffuse** every feature channel over the surface for a **learned** time `t`, computed in the eigenbasis as `Φ diag(e^{-λt}) Φᵀ M u`;
-2. compute **spatial gradient features**, which add a sense of direction (along a limb versus across it);
-3. mix the results with a per-vertex **MLP** and a residual connection.
-
-It takes HKS as input and outputs class scores for each vertex. These are averaged over each triangle's vertices to get one prediction per face, which is trained with cross-entropy.
-
-## Getting started
-
-```bash
-pip install torch scipy matplotlib robust_laplacian
-pip install "git+https://github.com/facebookresearch/pytorch3d.git"
-```
-
-Download and extract the dataset into `human_seg/`, then run `main.ipynb`.
-
-```
-├── main.ipynb      # data loading, visualization, LBO / HKS, model
-├── human_seg/      # dataset: train/, test/, seg/, sseg/
-└── assets/         # figures
-```
+**DiffusionNet**:
 
 ## References
 
