@@ -20,30 +20,36 @@ The preprocessed human segmentation benchmark from [MeshCNN](https://github.com/
 
 ## Methodology
 
-**Laplace–Beltrami operator** generalizes the Laplacian to curved surfaces. On triangle meshes, we discretize it using the cotangent Laplacian:
+## Methodology
 
-$$ (L f)_i = \sum_{j \in N(i)} w_{ij}\ (f_i - f_j) \qquad w_{ij} = \tfrac12(\cot\alpha_{ij} + \cot\beta_{ij}) $$
+### Laplace–Beltrami operator
 
-where $\alpha_{ij}$ and $\beta_{ij}$ are the angles opposite edge $(i,j)$. A lumped mass matrix $M$ is constructed using one third of each adjacent triangle's area.
+On a flat grid the Laplacian $\Delta f$ measures how much a value differs from the average of its neighbors.
+The **Laplace–Beltrami operator** is the same idea on a curved surface. On a triangle mesh it is discretized as the
+**cotangent Laplacian**:
 
-Since angles and areas are rotation-invariant, this discretization is also rotation-invariant and largely insensitive to bending.
+$$ (L f)_i = \sum_{j \in N(i)} w_{ij}\(f_i - f_j) \qquad w_{ij} = \tfrac12(\cot\alpha_{ij} + \cot\beta_{ij}) $$
 
-We compute $L$ and $M$ using [`robust_laplacian`](https://github.com/nmwsharp/robust-laplacians-py).
+where $\alpha_{ij}, \beta_{ij}$ are the two angles opposite the edge $(i,j)$. Each vertex also gets a **mass**
+$M_i$ = one third of the area of its adjacent triangles.
+
+We build $L$ and $M$ with [`robust_laplacian`](https://github.com/nmwsharp/robust-laplacians-py), which implements
+exactly this discretization and also stays well-behaved on degenerate triangles.
 
 ### Eigenfunctions
 
-The generalized eigenproblem
+Solving the generalized eigenproblem
 
-$$ L\ \phi_k = \lambda_k\ M\ \phi_k \qquad 0 = \lambda_0 \le \lambda_1 \le \dots $$
+$$ L\\phi_k = \lambda_k\ M\ \phi_k \qquad 0 = \lambda_0 \le \lambda_1 \le \dots $$
 
-produces the mesh's spectral basis, analogous to Fourier modes: low eigenvalues describe large-scale patterns, while high eigenvalues capture finer details.
+gives mesh's spectral basis: low eigenvalues describe large-scale patterns, while high eigenvalues capture finer details.
 
-We compute the first 128 eigenpairs using `scipy.sparse.linalg.eigsh` in shift-invert mode and discard the constant eigenfunction $\phi_0$.
+We compute the first **128** eigenpairs with `scipy.sparse.linalg.eigsh`, in shift-invert mode and discard the constant eigenfunction $\phi_0$.
 
 ![Laplace–Beltrami eigenfunctions on a body mesh](assets/laplace.png)
 
-*Eigenfunctions on one mesh (red = positive, blue = negative). $$\phi_1$$ runs from head to feet, $$\phi_2$$ separates the legs,
-$$\phi_3$$ isolates an arm; higher modes oscillate faster and capture finer detail.*
+*Eigenfunctions on one mesh (red = positive, blue = negative). $\phi_1$ runs from head to feet, $\phi_2$ separates the legs,
+$\phi_3$ isolates an arm; higher modes oscillate faster and capture finer detail.*
 
 ### Heat Kernel Signature
 
@@ -53,26 +59,13 @@ Imagine placing a unit of heat at point $x$ and letting it spread over the surfa
 * at the tip of a hand or foot heat can only flow one way → it stays → **high** value;
 * in the middle of the torso heat escapes in all directions → **low** value.
 
-Small $t$ describes local shape; large $$t$$ describes the position within the whole body (tip of a limb vs. center).
+Small $t$ describes local shape; large $t$ describes the position within the whole body (tip of a limb vs. center).
 Using the eigenbasis this has a closed form:
 
-$$ \mathrm{HKS}(x, t) = \sum_k e^{-\lambda_k t}\ \phi_k(x)^2 $$
+$$ \mathrm{HKS}(x, t) = \sum_k e^{-\lambda_k t}\, \phi_k(x)^2 $$
 
 Because only $\phi_k^2$ appears, the arbitrary sign of each eigenfunction doesn't matter.
 
-We evaluate it at **16 logarithmically spaced times** $t \in [0.01,\, 1]$. Since every mesh has unit area, the same times
-are used for all meshes, so channel $j$ means the same thing on every body. Each time slice is normalized by the heat trace
-$\sum_k e^{-\lambda_k t}$ (the "scaled HKS") and log-transformed, so all 16 channels live on a similar numeric scale:
-
-$$ \widetilde{\mathrm{HKS}}(x,t) = \log \frac{\mathrm{HKS}(x,t)}{\sum_k e^{-\lambda_k t}} $$
-
-The result is a **16-dimensional descriptor per vertex** that is rotation-invariant and almost pose-invariant.
-This is the input of our network.
-
-![Heat Kernel Signature at increasing time scales](assets/hks.png)
-
-*HKS at 8 of the 16 time scales (bright = more heat retained). At small $t$ the hands, feet and head already stand out;
-as $t$ grows the signature encodes the distance from the body's center, with the darkest values at the waist.*
 
 ### DiffusionNet
 
