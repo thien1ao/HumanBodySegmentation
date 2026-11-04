@@ -34,7 +34,7 @@ We compute $L$ and $M$ using [`robust_laplacian`](https://github.com/nmwsharp/ro
 
 The generalized eigenproblem
 
-$$ L\,\phi_k = \lambda_k\ M\ \phi_k \qquad 0 = \lambda_0 \le \lambda_1 \le \dots $$
+$$ L\ \phi_k = \lambda_k\ M\ \phi_k \qquad 0 = \lambda_0 \le \lambda_1 \le \dots $$
 
 produces the mesh's spectral basis, analogous to Fourier modes: low eigenvalues describe large-scale patterns, while high eigenvalues capture finer details.
 
