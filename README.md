@@ -18,9 +18,17 @@ The preprocessed human segmentation benchmark from [MeshCNN](https://github.com/
 | train | Adobe Fuse | 41 |
 | test  | SHREC'07 (Giorgi et al., 2007) | 18 |
 
-## Methodology
+Every mesh has **752 vertices and 1500 triangles**. Labels are given per edge (`seg/*.eseg`, 8 classes: head, hand, forearm, upper arm, torso, thigh, shin, foot) and converted to per-face labels by majority vote over each triangle's three edges. The test set comes from a different source than all training sets, so it measures generalization to unseen subjects.
 
 ## Methodology
+
+```
+mesh ──► normalize ──► Laplace–Beltrami ──► eigenbasis ──► HKS ──► DiffusionNet ──► label per face
+```
+
+### Normalization
+
+Each mesh is centered at its area-weighted centroid and scaled to **unit surface area** ($`V \leftarrow V / \sqrt{A}`$). This makes eigenvalues comparable across meshes, so the same diffusion times can be used for all of them.
 
 ### Laplace–Beltrami operator
 
@@ -28,10 +36,14 @@ On a flat grid the Laplacian $\Delta f$ measures how much a value differs from t
 The **Laplace–Beltrami operator** is the same idea on a curved surface. On a triangle mesh it is discretized as the
 **cotangent Laplacian**:
 
-$$ (L f)_i = \sum_{j \in N(i)} w_{ij}\(f_i - f_j) \qquad w_{ij} = \tfrac12(\cot\alpha_{ij} + \cot\beta_{ij}) $$
+```math
+(L f)_i = \sum_{j \in N(i)} w_{ij}\,(f_i - f_j), \qquad w_{ij} = \tfrac12(\cot\alpha_{ij} + \cot\beta_{ij})
+```
 
 where $\alpha_{ij}, \beta_{ij}$ are the two angles opposite the edge $(i,j)$. Each vertex also gets a **mass**
-$M_i$ = one third of the area of its adjacent triangles.
+$M_i$ equal to one third of the area of its adjacent triangles (lumped mass matrix).
+
+Only angles and areas appear, so $L$ is invariant to rotation and translation, and it barely changes when the body bends, because bending hardly stretches the surface.
 
 We build $L$ and $M$ with [`robust_laplacian`](https://github.com/nmwsharp/robust-laplacians-py), which implements
 exactly this discretization and also stays well-behaved on degenerate triangles.
@@ -40,13 +52,17 @@ exactly this discretization and also stays well-behaved on degenerate triangles.
 
 Solving the generalized eigenproblem
 
-$$ L\\phi_k = \lambda_k\ M\ \phi_k \qquad 0 = \lambda_0 \le \lambda_1 \le \dots $$
+```math
+L\,\phi_k = \lambda_k\, M\,\phi_k, \qquad 0 = \lambda_0 \le \lambda_1 \le \dots
+```
 
-gives mesh's spectral basis: low eigenvalues describe large-scale patterns, while high eigenvalues capture finer details.
+gives the mesh's spectral basis, a Fourier basis for the surface: low eigenvalues describe large-scale patterns, while high eigenvalues capture finer details.
 
-We compute the first **128** eigenpairs with `scipy.sparse.linalg.eigsh`, in shift-invert mode and discard the constant eigenfunction $\phi_0$.
+We compute the first **128** eigenpairs with `scipy.sparse.linalg.eigsh` in shift-invert mode and discard the constant eigenfunction $\phi_0$.
 
 ![Laplace–Beltrami eigenfunctions on a body mesh](assets/laplace.png)
+
+*Eigenfunctions on one mesh (red = positive, blue = negative): $\phi_1$ runs from head to feet, $\phi_2$ separates the legs, higher modes capture finer detail.*
 
 ### Heat Kernel Signature
 
@@ -59,21 +75,26 @@ Imagine placing a unit of heat at point $x$ and letting it spread over the surfa
 Small $t$ describes local shape; large $t$ describes the position within the whole body (tip of a limb vs. center).
 Using the eigenbasis this has a closed form:
 
-$$ \mathrm{HKS}(x, t) = \sum_k e^{-\lambda_k t}\, \phi_k(x)^2 $$
+```math
+\mathrm{HKS}(x, t) = \sum_k e^{-\lambda_k t}\, \phi_k(x)^2
+```
 
 Because only $\phi_k^2$ appears, the arbitrary sign of each eigenfunction doesn't matter. 
 
-We evaluate it at **16 logarithmically spaced times** $t \in [0.01,\, 1]$. Since every mesh has unit area, the same times
+We evaluate it at **16 logarithmically spaced times** $`t \in [0.01, 1]`$. Since every mesh has unit area, the same times
 are used for all meshes, so channel $j$ means the same thing on every body. Each time slice is normalized by the heat trace
 $\sum_k e^{-\lambda_k t}$ (the "scaled HKS") and log-transformed, so all 16 channels live on a similar numeric scale:
 
-$$ \widetilde{\mathrm{HKS}}(x,t) = \log \frac{\mathrm{HKS}(x,t)}{\sum_k e^{-\lambda_k t}} $$
+```math
+\widetilde{\mathrm{HKS}}(x,t) = \log \frac{\mathrm{HKS}(x,t)}{\sum_k e^{-\lambda_k t}}
+```
 
 The result is a **16-dimensional descriptor per vertex** that is rotation-invariant and almost pose-invariant.
 This is the input of our network.
 
 ![Heat Kernel Signature at increasing time scales](assets/hks.png)
 
+*HKS at increasing $t$ (bright = more heat retained): hands, feet and head stand out at small $t$; at large $t$ the signature encodes distance from the body's center.*
 
 ### DiffusionNet
 
@@ -81,7 +102,7 @@ DiffusionNet (Sharp et al., 2022) turns heat diffusion into a learnable layer. H
 diffuses learned features with **learned** times. The network is a stack of blocks, each of which:
 
 1. **diffuses** every feature channel $u$ over the surface for its own learned time $t$, computed cheaply in the
-   eigenbasis: $\; u \mapsto \Phi\, \mathrm{diag}(e^{-\lambda t})\, \Phi^{\top} M\, u$
+   eigenbasis: $`u \mapsto \Phi\, \mathrm{diag}(e^{-\lambda t})\, \Phi^{\top} M\, u`$
    (small $t$ = local context, large $t$ = whole-body context);
 2. computes **spatial gradient features**: inner products of surface gradients, which add a sense of direction
    (along a limb vs. across it) while staying rotation-invariant;
@@ -89,6 +110,21 @@ diffuses learned features with **learned** times. The network is a stack of bloc
 
 The network takes the per-vertex HKS as input and outputs 8 class scores per vertex. These are averaged over the three
 vertices of each triangle to give one prediction per face, trained with cross-entropy against the face labels.
+
+## Getting started
+
+```bash
+pip install torch scipy matplotlib robust_laplacian
+pip install "git+https://github.com/facebookresearch/pytorch3d.git"
+```
+
+Download the dataset, extract it to `human_seg/`, and run `main.ipynb`.
+
+```
+├── main.ipynb   # data loading, visualization, Laplace–Beltrami / HKS, model
+├── human_seg/   # dataset (train/, test/, seg/, sseg/), not tracked by git
+└── assets/      # figures used in this README
+```
 
 ## References
 
