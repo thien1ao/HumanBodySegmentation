@@ -5,18 +5,6 @@ A deep learning pipeline for semantic human mesh segmentation (8 classes) that l
 
 ![Sample meshes with ground-truth body-part labels](assets/samples.png)
 
-## Dataset
-
-The preprocessed human segmentation benchmark from [MeshCNN](https://github.com/ranahanocka/MeshCNN) ([download](https://www.dropbox.com/scl/fi/r04ahap6vhuwzkjj9mpwk/human_seg.tar.gz?rlkey=dyjwx6ehxmarvtrzl6atvs9mz&e=1)), extracted to `human_seg/`.
-
-| Split | Source | Meshes |
-|-------|--------|-------:|
-| train | MIT animation (Vlasic et al., 2008) | 169 |
-| train | FAUST (Bogo et al., 2014) | 100 |
-| train | SCAPE (Anguelov et al., 2005) | 71 |
-| train | Adobe Fuse | 41 |
-| test  | SHREC'07 (Giorgi et al., 2007) | 18 |
-
 ## Methodology
 
 ### Normalization
