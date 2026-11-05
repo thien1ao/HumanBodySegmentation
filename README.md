@@ -8,7 +8,7 @@ predictions do not depend on how the mesh is oriented.
 
 <img src="assets/samples.png" alt="samples" height="600">
 
-## Overview
+## Repository Structure
 The preprocessed human segmentation benchmark from [MeshCNN](https://github.com/ranahanocka/MeshCNN)
 ([download](https://www.dropbox.com/scl/fi/r04ahap6vhuwzkjj9mpwk/human_seg.tar.gz?rlkey=dyjwx6ehxmarvtrzl6atvs9mz&e=1)),
 extracted to `human_seg/`.
