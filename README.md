@@ -51,11 +51,4 @@ HumanBodySegmentation/
 *Training and test loss/accuracy. Test accuracy plateaus around 88% after ~15 epochs while training accuracy keeps
 rising to 96.6%, so the model overfits slightly.*
 
-### Confusion matrix
-
-<img src="assets/confusion_matrix.png" alt="Confusion matrix" width="400">
-
-*Row-normalized, area-weighted confusion matrix. Almost all errors are between parts that touch:
-thigh → torso (hip), upper arm → torso (shoulder), foot → shin (ankle), hand → forearm (wrist), head → torso (neck).*
-
 
