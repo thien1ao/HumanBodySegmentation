@@ -2,7 +2,7 @@
 
 Semantic segmentation of human body meshes into 8 parts (head, hand, forearm, upper arm, torso, thigh, shin, foot).
 The network only sees **intrinsic** geometry (Laplace–Beltrami eigenbasis and Heat Kernel Signature), so its
-predictions do not depend on how the mesh is rotated, positioned or posed.
+predictions do not depend on how the mesh is oriented.
 
 **Test results (SHREC'07, unseen during training): 88.1% face accuracy, 79.9% mIoU**, with a 200k-parameter model
 that trains in about 2 minutes on a single GPU.
@@ -22,10 +22,6 @@ extracted to `human_seg/`.
 | train | SCAPE (Anguelov et al., 2005) | 71 |
 | train | Adobe Fuse | 41 |
 | test  | SHREC'07 (Giorgi et al., 2007) | 18 |
-
-Every mesh has about **750 vertices and 1500 triangles**. Labels are given per edge (`seg/*.eseg`) and converted to
-per-face labels by a majority vote over each triangle's three edges. The test set comes from a different source than
-all training sets, so it measures generalization to unseen subjects, proportions and annotation styles.
 
 ## Method
 
@@ -158,28 +154,6 @@ rising to 96.6%, so the model overfits slightly; longer training does not help.*
   worst meshes (66–80%).
 - **Some mistakes are not near a boundary**, e.g. head predicted as upper arm on some meshes. Here the intrinsic
   features alone are not enough to tell the parts apart.
-
-## Running on your own meshes
-
-The model works on any `.obj` file, without labels. Pose and orientation don't matter.
-
-```bash
-# segment a mesh and show it (--up only changes how it is drawn)
-python python_scripts/predict.py my_mesh.obj --up z --save assets/my_mesh.png --labels my_mesh_faces.txt
-
-# write annotation files in the dataset format (.eseg / .seseg) from the predictions
-python python_scripts/annotate.py my_mesh.obj --out annotations
-```
-
-The mesh should be a single connected human-like body; separate pieces (eyes, clothing, props) break the spectral
-features. Any scale works; meshes with roughly 500–20k vertices run fast.
-
-![Prediction on a stylized creature mesh](assets/diablo.png)
-
-*Out-of-distribution example (`diablo3_pose.obj`, 2.5k vertices): arms (upper arm → forearm → hand) and legs
-(thigh → shin → foot) are segmented in the right order, but the horned head is mostly labelled torso, and the tail,
-which has no class, gets a mix of arm labels. The files `annotate.py` writes are predictions (pseudo-labels), not
-ground truth, and should be corrected before training or evaluating on them.*
 
 ## Getting started
 
