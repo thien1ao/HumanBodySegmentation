@@ -47,19 +47,6 @@ tar -xzf human_seg.tar.gz
 
 ![Pipeline](assets/pipeline.png)
 
-1. **Normalization.** Each mesh is centered on its area-weighted centroid and scaled to unit surface area.
-2. **Spectral decomposition.** The 128 smallest eigenpairs of the robust Laplacian
-   ([Sharp & Crane, 2020](https://github.com/nmwsharp/robust-laplacians-py)) are computed, and the constant eigenvector is dropped.
-3. **Heat Kernel Signature.** HKS is evaluated at 16 log-spaced times, chosen from the median spectrum of the training set, then log-scaled and standardized with training-set statistics.
-4. **MiniDiffusionNet.** A linear embedding (width 128) is followed by 4 residual diffusion blocks. Each block:
-   - diffuses features in the spectral domain with a **learned per-channel diffusion time** *t*:
-     `x̃ = Φ · diag(exp(−λ·t)) · Φᵀ M x`
-   - concatenates `[x, x̃]` and applies a two-layer MLP with dropout as a residual update.
-
-   Per-vertex logits are averaged over each face's vertices to give per-face predictions.
-   See [`python_scripts/model.py`](python_scripts/model.py).
-5. **Training.** Cross-entropy loss, AdamW (lr 1e-3, weight decay 1e-4), cosine annealing over 100 epochs, and Gaussian feature noise (σ = 0.05) for augmentation.
-
 ## Results
 
 <p align="center">
