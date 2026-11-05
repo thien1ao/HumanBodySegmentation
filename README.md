@@ -111,34 +111,78 @@ jupyter notebook notebooks/main.ipynb
 
 ## Results
 
-### Sample predictions
-
 <p align="center">
-  <img src="assets/predictions/shrec__1_prediction.png" alt="Prediction on SHREC'07 mesh 1" width="32%">
-  <img src="assets/predictions/shrec__10_prediction.png" alt="Prediction on SHREC'07 mesh 10" width="32%">
-  <img src="assets/predictions/shrec__11_prediction.png" alt="Prediction on SHREC'07 mesh 11" width="32%">
+  <img src="https://img.shields.io/badge/Face%20Accuracy-88.1%25-2ea44f?style=for-the-badge" alt="Face accuracy 88.1%">
+  <img src="https://img.shields.io/badge/Mean%20IoU-79.9%25-1f6feb?style=for-the-badge" alt="Mean IoU 79.9%">
+  <img src="https://img.shields.io/badge/Test%20Set-SHREC%2707%20%C2%B7%2018%20meshes-6e7781?style=for-the-badge" alt="Test set SHREC'07, 18 meshes">
 </p>
 
-### Per-class IoU
+### 🎯 Qualitative results
 
-| Head  | Hand  | Forearm | Upper arm | Torso | Thigh | Shin  | Foot  | **Mean** |
-|:-----:|:-----:|:-------:|:---------:|:-----:|:-----:|:-----:|:-----:|:--------:|
-| 75.8  | 84.7  | 84.0    | 69.6      | 82.3  | 75.7  | 82.5  | 84.8  | **79.9** |
+Each row shows the ground truth, the prediction, and the misclassified faces (in red) for one unseen SHREC'07 mesh.
 
-### Training curves
+<p align="center">
+  <img src="assets/predictions/shrec__1_prediction.png" alt="Prediction on SHREC'07 mesh 1" width="100%">
+</p>
 
-![Training curves](assets/history.png)
+<details>
+<summary><b>More examples</b></summary>
+<br>
+<p align="center">
+  <img src="assets/predictions/shrec__10_prediction.png" alt="Prediction on SHREC'07 mesh 10" width="100%">
+  <img src="assets/predictions/shrec__11_prediction.png" alt="Prediction on SHREC'07 mesh 11" width="100%">
+</p>
+</details>
+
+### 📊 Per-class IoU
+
+<div align="center">
+
+| Part | IoU (%) | |
+|:-----|:-------:|:--|
+| ![head](https://img.shields.io/badge/head-CC4D4D?style=flat-square)           | 75.8 | `███████████████░░░░░` |
+| ![hand](https://img.shields.io/badge/hand-4DB34D?style=flat-square)           | 84.7 | `█████████████████░░░` |
+| ![forearm](https://img.shields.io/badge/forearm-4D73E6?style=flat-square)     | 84.0 | `█████████████████░░░` |
+| ![upper arm](https://img.shields.io/badge/upper%20arm-F2BF33?style=flat-square) | 69.6 | `██████████████░░░░░░` |
+| ![torso](https://img.shields.io/badge/torso-B359D9?style=flat-square)         | 82.3 | `████████████████░░░░` |
+| ![thigh](https://img.shields.io/badge/thigh-33CCCC?style=flat-square)         | 75.7 | `███████████████░░░░░` |
+| ![shin](https://img.shields.io/badge/shin-F28C26?style=flat-square)           | 82.5 | `████████████████░░░░` |
+| ![foot](https://img.shields.io/badge/foot-999999?style=flat-square)           | 84.8 | `█████████████████░░░` |
+| **Mean**                                                                      | **79.9** | `████████████████░░░░` |
+
+</div>
+
+The badge colors match the part colors in the figures. Hands, forearms and feet are segmented most reliably. The upper arm is the hardest part, because its boundary with the torso at the shoulder is the least well defined.
+
+### 📈 Training curves
+
+<p align="center">
+  <img src="assets/history.png" alt="Training and test loss/accuracy" width="100%">
+</p>
 
 Test accuracy levels off at about 88% after roughly 15 epochs, while training accuracy keeps climbing to 96.6%. This points to mild overfitting.
 
-### Confusion matrix
+### 🔍 Error analysis
 
-<p align="center">
-  <img src="assets/confusion_matrix.png" alt="Confusion matrix" width="400">
-</p>
-
-The matrix is row-normalized and area-weighted. Almost all errors fall at boundaries between parts that touch:
-thigh → torso (hip), upper arm → torso (shoulder), foot → shin (ankle), hand → forearm (wrist), and head → torso (neck).
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="assets/confusion_matrix.png" alt="Confusion matrix" width="100%">
+    </td>
+    <td width="50%">
+      <p>The confusion matrix is <b>row-normalized and area-weighted</b>. Almost all errors fall at boundaries between parts that touch:</p>
+      <table>
+        <tr><th>True → Predicted</th><th>Joint</th></tr>
+        <tr><td>thigh → torso</td><td>🦵 hip</td></tr>
+        <tr><td>upper arm → torso</td><td>💪 shoulder</td></tr>
+        <tr><td>foot → shin</td><td>🦶 ankle</td></tr>
+        <tr><td>hand → forearm</td><td>✋ wrist</td></tr>
+        <tr><td>head → torso</td><td>🙂 neck</td></tr>
+      </table>
+      <p>These joints have no sharp geometric boundary, so where one part ends and the next begins is partly a labeling convention.</p>
+    </td>
+  </tr>
+</table>
 
 ## References
 
