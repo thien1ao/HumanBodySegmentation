@@ -4,8 +4,7 @@ Semantic segmentation of human body meshes into 8 parts (head, hand, forearm, up
 The network only sees **intrinsic** geometry (Laplace–Beltrami eigenbasis and Heat Kernel Signature), so its
 predictions do not depend on how the mesh is oriented.
 
-**Test results (SHREC'07, unseen during training): 88.1% face accuracy, 79.9% mIoU**, with a 200k-parameter model
-that trains in about 2 minutes on a single GPU.
+**Test results SHREC'07: 88.1% face accuracy, 79.9% mIoU**
 
 ![Sample meshes with ground-truth body-part labels](assets/samples.png)
 
