@@ -55,9 +55,7 @@ tar -xzf human_seg.tar.gz
   <img src="https://img.shields.io/badge/Test%20Set-SHREC%2707%20%C2%B7%2018%20meshes-6e7781?style=for-the-badge" alt="Test set SHREC'07, 18 meshes">
 </p>
 
-### 🎯 Qualitative results
-
-Each row shows the ground truth, the prediction, and the misclassified faces (in red) for one unseen SHREC'07 mesh.
+### Predictions
 
 <p align="center">
   <img src="assets/predictions/shrec__1_prediction.png" alt="Prediction on SHREC'07 mesh 1" width="100%">
@@ -90,9 +88,7 @@ Each row shows the ground truth, the prediction, and the misclassified faces (in
 
 </div>
 
-The badge colors match the part colors in the figures. Hands, forearms and feet are segmented most reliably. The upper arm is the hardest part, because its boundary with the torso at the shoulder is the least well defined.
-
-### 📈 Training curves
+### Training curves
 
 <p align="center">
   <img src="assets/history.png" alt="Training and test loss/accuracy" width="100%">
@@ -100,7 +96,7 @@ The badge colors match the part colors in the figures. Hands, forearms and feet 
 
 Test accuracy levels off at about 88% after roughly 15 epochs, while training accuracy keeps climbing to 96.6%. This points to mild overfitting.
 
-### 🔍 Error analysis
+### Error analysis
 
 <table>
   <tr>
@@ -111,13 +107,13 @@ Test accuracy levels off at about 88% after roughly 15 epochs, while training ac
       <p>The confusion matrix is <b>row-normalized and area-weighted</b>. Almost all errors fall at boundaries between parts that touch:</p>
       <table>
         <tr><th>True → Predicted</th><th>Joint</th></tr>
-        <tr><td>thigh → torso</td><td>🦵 hip</td></tr>
-        <tr><td>upper arm → torso</td><td>💪 shoulder</td></tr>
-        <tr><td>foot → shin</td><td>🦶 ankle</td></tr>
-        <tr><td>hand → forearm</td><td>✋ wrist</td></tr>
-        <tr><td>head → torso</td><td>🙂 neck</td></tr>
+        <tr><td>thigh → torso</td><td> hip</td></tr>
+        <tr><td>upper arm → torso</td><td> shoulder</td></tr>
+        <tr><td>foot → shin</td><td> ankle</td></tr>
+        <tr><td>hand → forearm</td><td> wrist</td></tr>
+        <tr><td>head → torso</td><td> neck</td></tr>
       </table>
-      <p>These joints have no sharp geometric boundary, so where one part ends and the next begins is partly a labeling convention.</p>
+      
     </td>
   </tr>
 </table>
