@@ -8,27 +8,6 @@ The network only sees **intrinsic** geometry: the Laplace–Beltrami eigenbasis 
   <img src="assets/samples.png" alt="Ground-truth segmentations from the training set" height="600">
 </p>
 
-## Highlights
-
-| Metric (SHREC'07 test set, 18 meshes) | Value     |
-|---------------------------------------|-----------|
-| Face accuracy                         | **88.1%** |
-| Mean IoU                              | **79.9%** |
-
-- Orientation-invariant input features (HKS at 16 log-spaced diffusion times)
-- A small DiffusionNet-style model with learned per-channel spectral diffusion
-- The full pipeline (preprocessing, training, evaluation, visualization) is in plain PyTorch
-
-## Table of Contents
-
-- [Repository Structure](#repository-structure)
-- [Installation](#installation)
-- [Dataset](#dataset)
-- [Usage](#usage)
-- [Method](#method)
-- [Results](#results)
-- [References](#references)
-
 ## Repository Structure
 
 ```
@@ -47,17 +26,6 @@ HumanBodySegmentation/
 └── model.pt           # Trained checkpoint
 ```
 
-## Installation
-
-Python 3 with the following packages is required:
-
-```bash
-pip install torch numpy scipy matplotlib robust-laplacian
-```
-
-[PyTorch3D](https://github.com/facebookresearch/pytorch3d) is used for OBJ loading. Follow its
-[installation guide](https://github.com/facebookresearch/pytorch3d/blob/main/INSTALL.md) for your CUDA/PyTorch version.
-
 ## Dataset
 
 This project uses the preprocessed human segmentation benchmark from [MeshCNN](https://github.com/ranahanocka/MeshCNN)
@@ -75,24 +43,7 @@ tar -xzf human_seg.tar.gz   # creates human_seg/{train,test,seg,sseg}
 | Train | Adobe              | 41     |
 | Test  | SHREC'07           | 18     |
 
-Labels come as per-edge annotations. Each face gets the majority label of its three edges.
-
-## Usage
-
-**Train** a model from scratch (100 epochs; uses CUDA if available). The checkpoint is written to `model.pt`:
-
-```bash
-cd python_scripts
-python train.py
-```
-
-**Explore and evaluate** with the notebook. It covers data inspection, eigenvector and HKS visualizations, training curves, per-mesh predictions, the confusion matrix, and per-class IoU:
-
-```bash
-jupyter notebook notebooks/main.ipynb
-```
-
-## Method
+## Methodology
 
 ![Pipeline](assets/pipeline.png)
 
