@@ -106,15 +106,13 @@ Test accuracy levels off at about 88% after roughly 15 epochs, while training ac
     <td width="50%">
       <p>The confusion matrix is <b>row-normalized and area-weighted</b>. Almost all errors fall at boundaries between parts that touch:</p>
       <table>
-        <tr><th>True → Predicted</th><th>Joint</th></tr>
-        <tr><td>thigh → torso</td><td> hip</td></tr>
-        <tr><td>upper arm → torso</td><td> shoulder</td></tr>
-        <tr><td>foot → shin</td><td> ankle</td></tr>
-        <tr><td>hand → forearm</td><td> wrist</td></tr>
-        <tr><td>head → torso</td><td> neck</td></tr>
+        <tr><th>True → Predicted</th>
+        <tr><td>thigh → torso</td>
+        <tr><td>upper arm → torso</td>
+        <tr><td>foot → shin</td>
+        <tr><td>hand → forearm</td>
+        <tr><td>head → torso</td>
       </table>
-      
-    </td>
   </tr>
 </table>
 
