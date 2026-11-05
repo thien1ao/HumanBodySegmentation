@@ -1,4 +1,4 @@
-# 3D Human Mesh Part Segmentation with Spectral Features and DiffusionNet
+# 3D Human Body Mesh Part Segmentation with Spectral Features and DiffusionNet
 
 Semantic segmentation of human body meshes into 8 parts (head, hand, forearm, upper arm, torso, thigh, shin, foot).
 The network only sees **intrinsic** geometry (Laplace–Beltrami eigenbasis and Heat Kernel Signature), so its
