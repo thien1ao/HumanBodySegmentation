@@ -40,14 +40,9 @@ HumanBodySegmentation/
 
 ### Predictions
 
-<p align="center">
-  <img src="assets/predictions/shrec__10_prediction.png"
-       alt="SHREC 10 prediction" width="32%">
-  <img src="assets/predictions/shrec__1_prediction.png"
-       alt="SHREC 1 prediction" width="32%">
-  <img src="assets/predictions/shrec__11_prediction.png"
-       alt="SHREC 11 prediction" width="32%">
-</p>
+<img src="assets/predictions/shrec__1_prediction.png" alt="preditiction_1">
+<img src="assets/predictions/shrec__10_prediction.png" alt="preditiction_10">
+<img src="assets/predictions/shrec__11_prediction.png" alt="preditiction_11">
 
 ### Training performance
 
