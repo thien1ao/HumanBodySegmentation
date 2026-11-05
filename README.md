@@ -14,18 +14,21 @@ The preprocessed human segmentation benchmark from [MeshCNN](https://github.com/
 extracted to `human_seg/`.
 
 ```
+HumanBodySegmentation/
 ├── python_scripts/
-│   ├── data.py        # paths, mesh loading, edge → face labels, alignment
-│   ├── features.py    # Laplace–Beltrami eigenbasis, HKS, normalization
-│   ├── model.py       # MiniDiffusionNet
-│   ├── train.py       # training loop
-│   ├── evaluate.py    # confusion matrix
-│   ├── plotting.py    # all figures
+│   ├── data.py        # Mesh loading, labels and alignment
+│   ├── features.py    # Spectral decomposition and HKS
+│   ├── model.py       # MiniDiffusionNet architecture
+│   ├── train.py       # Training loop
+│   ├── evaluate.py    # Evaluation and confusion matrix
+│   └── plotting.py    # Visualization utilities
+│
 ├── notebooks/
-│   └── main.ipynb     # exploration notebook
-├── assets/            
-├── human_seg/         
-└── model.pt           # trained model
+│   └── main.ipynb     # Data exploration and experiments
+│
+├── assets/
+├── human_seg/         # Extracted dataset
+└── model.pt           # Trained model
 ```
 
 ## Methodology
@@ -34,18 +37,19 @@ extracted to `human_seg/`.
 
 ## Results
 
+### Training performance
+
 ![Training curves](assets/history.png)
 
 *Training and test loss/accuracy. Test accuracy plateaus around 88% after ~15 epochs while training accuracy keeps
 rising to 96.6%, so the model overfits slightly.*
 
+### Confusion matrix
+
 <img src="assets/confusion_matrix.png" alt="Confusion matrix" width="400">
 
 *Row-normalized, area-weighted confusion matrix. Almost all errors are between parts that touch:
 thigh → torso (hip), upper arm → torso (shoulder), foot → shin (ankle), hand → forearm (wrist), head → torso (neck).*
-
-
-
 
 ## References
 
