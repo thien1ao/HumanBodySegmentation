@@ -6,7 +6,7 @@ predictions do not depend on how the mesh is oriented.
 
 **Test results SHREC'07: 88.1% face accuracy, 79.9% mIoU**
 
-<img src="assets/samples.png" alt="samples" height="400">
+<img src="assets/samples.png" alt="samples" height="600">
 
 ## Overview
 The preprocessed human segmentation benchmark from [MeshCNN](https://github.com/ranahanocka/MeshCNN)
