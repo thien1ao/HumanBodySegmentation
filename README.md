@@ -23,10 +23,10 @@ extracted to `human_seg/`.
 │   ├── plotting.py    # all figures
 ├── notebooks/
 │   └── main.ipynb     # exploration notebook
-├── assets/             
+├── assets/            
 ├── human_seg/         
 └── model.pt           # trained model
-
+```
 
 ## Methodology
 
@@ -45,7 +45,7 @@ rising to 96.6%, so the model overfits slightly.*
 thigh → torso (hip), upper arm → torso (shoulder), foot → shin (ankle), hand → forearm (wrist), head → torso (neck).*
 
 
-```
+
 
 ## References
 
