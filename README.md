@@ -32,7 +32,7 @@ This project uses the preprocessed human segmentation benchmark from [MeshCNN](h
 ([download](https://www.dropbox.com/scl/fi/r04ahap6vhuwzkjj9mpwk/human_seg.tar.gz?rlkey=dyjwx6ehxmarvtrzl6atvs9mz&e=1)). Extract it into the repository root:
 
 ```bash
-tar -xzf human_seg.tar.gz   # creates human_seg/{train,test,seg,sseg}
+tar -xzf human_seg.tar.gz 
 ```
 
 | Split | Source             | Meshes |
