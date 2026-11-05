@@ -51,24 +51,15 @@ one mesh per step, Gaussian noise (σ = 0.05) on the standardized HKS as augment
 
 Evaluated on the 18 SHREC'07 test meshes after 100 epochs.
 
-| | |
-|---|---:|
-| Face accuracy | **88.1%** |
-| Mean IoU (area-weighted) | **79.9%** |
+![Training curves](assets/history.png)
 
-| Class | head | hand | forearm | upper arm | torso | thigh | shin | foot |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| IoU | 0.758 | 0.847 | 0.840 | 0.696 | 0.823 | 0.757 | 0.825 | 0.848 |
+*Training and test loss/accuracy. Test accuracy plateaus around 88% after ~15 epochs while training accuracy keeps
+rising to 96.6%, so the model overfits slightly.*
 
 ![Confusion matrix](assets/confusion_matrix.png)
 
 *Row-normalized, area-weighted confusion matrix. Almost all errors are between parts that touch:
 thigh → torso (hip), upper arm → torso (shoulder), foot → shin (ankle), hand → forearm (wrist), head → torso (neck).*
-
-![Training curves](assets/history.png)
-
-*Training and test loss/accuracy. Test accuracy plateaus around 88% after ~15 epochs while training accuracy keeps
-rising to 96.6%, so the model overfits slightly.*
 
 ## Getting started
 
