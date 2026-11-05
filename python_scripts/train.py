@@ -1,4 +1,3 @@
-"""Training loop. Run `python python_scripts/train.py` to train and save model.pt."""
 import random
 import time
 from collections import defaultdict
@@ -41,7 +40,6 @@ def run_epoch(model, data, optimizer=None, noise=0.0):
 
 
 def save_checkpoint(model, history, t, mean, std, path=MODEL_PATH):
-    """Weights plus the HKS times and normalization needed to run on new meshes."""
     torch.save({"model": model.state_dict(), "history": dict(history),
                 "t": t.cpu(), "mean": mean.cpu(), "std": std.cpu()}, path)
 

@@ -1,4 +1,3 @@
-"""All figures: meshes, spectral features, training curves, predictions, confusion matrix."""
 import math
 
 import numpy as np
@@ -6,6 +5,7 @@ import torch
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import art3d
 from matplotlib.patches import Patch
+from pathlib import Path
 
 from data import ASSETS, CLASS_NAMES, NUM_CLASSES, source, load_example, bring_to_same_frame
 from evaluate import predict
@@ -22,8 +22,8 @@ COLORS = torch.tensor([
 ])
 
 ERROR_COLORS = torch.tensor([
-    [0.85, 0.85, 0.85],  # correct
-    [0.90, 0.10, 0.10],  # wrong
+    [0.85, 0.85, 0.85],
+    [0.90, 0.10, 0.10],
 ])
 
 
@@ -163,14 +163,28 @@ def plot_prediction(d, pred, filename=None):
     _save_and_show(filename)
 
 
-def plot_predictions(model, data, data_dev, n=None, names=None):
+def plot_predictions(model, data, data_dev, n=None, names=None, save_dir=None):
+
     pairs = list(zip(data, data_dev))
+
     if names is not None:
         pairs = [(d, dd) for d, dd in pairs if d["name"] in names]
+
     if n is not None:
         pairs = pairs[:n]
+
+    if save_dir is not None:
+        save_dir = Path(save_dir)
+        save_dir.mkdir(parents=True, exist_ok=True)
+
     for d, dd in pairs:
-        plot_prediction(d, predict(model, dd))
+        pred = predict(model, dd)
+
+        filename = None
+        if save_dir is not None:
+            filename = save_dir / f"{d['name']}_prediction.png"
+
+        plot_prediction(d, pred, filename=filename)
 
 
 def plot_confusion_matrix(cm, class_names=CLASS_NAMES, title="Confusion matrix", filename=ASSETS / "confusion_matrix.png"):

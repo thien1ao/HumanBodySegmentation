@@ -1,4 +1,3 @@
-"""Loading human_seg meshes, face labels, and alignment."""
 import os
 import glob
 from pathlib import Path
@@ -17,7 +16,6 @@ NUM_CLASSES = len(CLASS_NAMES)
 
 
 def source(p):
-    """Dataset a mesh comes from, e.g. 'shrec' for 'shrec__6.obj'."""
     return os.path.basename(p).split("__")[0]
 
 
@@ -82,7 +80,6 @@ def load_mesh(obj_path):
 
 
 def load_example(obj_path, path=DATA_PATH):
-    """Load a human_seg mesh together with its ground-truth face labels."""
     e = load_mesh(obj_path)
     edge_labels = np.loadtxt(f"{path}/seg/{e['name']}.eseg", dtype=np.int64)
     e["labels"] = get_face_labels_from_edges(e["Fc"], edge_labels)

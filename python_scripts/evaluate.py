@@ -1,6 +1,4 @@
-"""Predictions and error analysis on the test set."""
 import torch
-
 from data import NUM_CLASSES, compute_areas
 
 
