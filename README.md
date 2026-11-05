@@ -106,6 +106,10 @@ rising to 96.6%, so the model overfits slightly.*
 *Row-normalized, area-weighted confusion matrix. Almost all errors are between parts that touch:
 thigh → torso (hip), upper arm → torso (shoulder), foot → shin (ankle), hand → forearm (wrist), head → torso (neck).*
 
+### Predictions
+
+<img src="assets/predictions/shrec__10_prediction.png" alt="preditiction_10">
+
 ## References
 
 - N. Sharp, S. Attaiki, K. Crane, M. Ovsjanikov. *DiffusionNet: Discretization Agnostic Learning on Surfaces.* ACM TOG 2022. [code](https://github.com/nmwsharp/diffusion-net)
