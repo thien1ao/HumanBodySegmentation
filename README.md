@@ -1,94 +1,195 @@
-# Human Mesh Segmentation using DiffusionNet
+# Human Body Mesh Segmentation with Spectral Features and DiffusionNet
 
-## Overview
-A deep learning pipeline for semantic human mesh segmentation (8 classes) that leverages intrinsic geometric features to achieve spatial invariance and robust generalization across different mesh poses and orientations.
+Semantic segmentation of 3D human body meshes into eight anatomical parts: **head, hand, forearm, upper arm, torso, thigh, shin, foot**.
 
-![Sample meshes with ground-truth body-part labels](assets/samples.png)
+The network only sees **intrinsic** geometry: the Laplace–Beltrami eigenbasis and the Heat Kernel Signature (HKS). Because of this, its predictions do not depend on how the mesh is oriented or positioned in space.
 
-## Methodology
+<p align="center">
+  <img src="assets/samples.png" alt="Ground-truth segmentations from the training set" height="600">
+</p>
 
-### Normalization
+## Highlights
 
-Each mesh is centered and normalized to unit surface area. This removes differences in translation and scale, making the Laplacian eigenvalues more comparable across meshes.
+| Metric (SHREC'07 test set, 18 meshes) | Value     |
+|---------------------------------------|-----------|
+| Face accuracy                         | **88.1%** |
+| Mean IoU                              | **79.9%** |
 
-### Laplace–Beltrami Operator
+- Orientation-invariant input features (HKS at 16 log-spaced diffusion times)
+- A small DiffusionNet-style model with learned per-channel spectral diffusion
+- The full pipeline (preprocessing, training, evaluation, visualization) is in plain PyTorch
 
-While the standard Laplacian $\Delta f$ measures local deviation from neighboring values on a flat grid, the **Laplace–Beltrami operator** extends this concept to arbitrary curved surfaces. On discrete triangle meshes, we use the standard cotangent discretization:
+## Table of Contents
 
-$$(Lf)_i = \sum_{j \in N(i)} w_{ij}(f_i - f_j), \quad w_{ij} = \frac{1}{2}(\cot \alpha_{ij} + \cot \beta_{ij})$$
+- [Repository Structure](#repository-structure)
+- [Installation](#installation)
+- [Dataset](#dataset)
+- [Usage](#usage)
+- [Method](#method)
+- [Results](#results)
+- [References](#references)
 
-where $\alpha_{ij}$ and $\beta_{ij}$ are the angles opposite edge $(i,j)$. To complete the operator, a lumped mass matrix $M$ is constructed, assigning each vertex a weight equal to one-third of the combined area of its adjacent triangles.
+## Repository Structure
 
-Because this formulation depends strictly on local angles and areas, $L$ is inherently invariant to rigid transformations (rotation and translation) and highly robust to isometric deformations such as body bending, which preserve surface metrics.
+```
+HumanBodySegmentation/
+├── python_scripts/
+│   ├── data.py        # Mesh loading, normalization, edge-to-face labels, alignment
+│   ├── features.py    # Laplace–Beltrami spectrum and Heat Kernel Signature
+│   ├── model.py       # MiniDiffusionNet architecture
+│   ├── train.py       # Training loop and checkpointing (entry point)
+│   ├── evaluate.py    # Inference, confusion matrix, IoU
+│   └── plotting.py    # Visualization utilities
+├── notebooks/
+│   └── main.ipynb     # End-to-end walkthrough: data, features, training, evaluation
+├── assets/            # Figures used in this README
+├── human_seg/         # Dataset (download separately, see below)
+└── model.pt           # Trained checkpoint
+```
 
-We construct $L$ and $M$ using [`robust_laplacian`](https://github.com/nmwsharp/robust-laplacians-py), which guarantees numerical stability even when handling degenerate triangles.
+## Installation
 
-### Eigenfunctions
-
-Solving the generalized eigenproblem:
-
-$$L \phi_k = \lambda_k M \phi_k, \quad 0 = \lambda_0 \le \lambda_1 \le \dots$$
-
-yields the mesh's spectral basis—acting as a generalized Fourier basis for non-Euclidean surfaces. Low eigenvalues capture global, large-scale structural patterns, while higher eigenvalues encode fine-grained geometric details.
-
-We compute the first **128 non-trivial eigenpairs** using `scipy.sparse.linalg.eigsh` in shift-invert mode, discarding the constant zero-eigenfunction.
-
-![Laplace–Beltrami eigenfunctions on a body mesh](assets/laplace.png)
-
-### Heat Kernel Signature
-
-Using the precomputed Laplace–Beltrami eigenbasis, the heat kernel admits a closed-form spectral expansion, simplifying the HKS to:
-
-$$\text{HKS}(x, t) = k_t(x, x) = \sum_k e^{-\lambda_k t} \phi_k(x)^2$$
-
-Because the formulation relies on squared eigenfunctions ($\phi_k^2$), it is naturally invariant to the sign ambiguity inherent in eigenvalue decomposition.
-
-We evaluate the signature across **16 logarithmically spaced time steps** $t \in [0.01, 1]$. Since all meshes are normalized to unit surface area, each time channel corresponds to consistent geometric scales across diverse body shapes. 
-
-To stabilize numerical ranges across channels, each time slice is normalized by the total heat trace ($\sum_k e^{-\lambda_k t}$) and log-transformed:
-
-$$\widetilde{\text{HKS}}(x, t) = \log \frac{\text{HKS}(x, t)}{\sum_k e^{-\lambda_k t}}$$
-
-The resulting **16-dimensional per-vertex descriptor** is strictly rotation-invariant and robust to articulation, serving as the primary input feature for the network.
-
-![Heat Kernel Signature at increasing time scales](assets/hks.png)
-
-### DiffusionNet
-
-DiffusionNet (Sharp et al., 2022) turns heat diffusion into a learnable layer. HKS uses **fixed** times; DiffusionNet
-diffuses learned features with **learned** times. The network is a stack of blocks, each of which:
-
-1. **diffuses** every feature channel $u$ over the surface for its own learned time $t$, computed cheaply in the
-   eigenbasis: $`u \mapsto \Phi\, \mathrm{diag}(e^{-\lambda t})\, \Phi^{\top} M\, u`$
-   (small $t$ = local context, large $t$ = whole-body context);
-2. computes **spatial gradient features**: inner products of surface gradients, which add a sense of direction
-   (along a limb vs. across it) while staying rotation-invariant;
-3. mixes the input, diffused and gradient features with a per-vertex **MLP** and a residual connection.
-
-The network takes the per-vertex HKS as input and outputs 8 class scores per vertex. These are averaged over the three
-vertices of each triangle to give one prediction per face, trained with cross-entropy against the face labels.
-
-## Getting started
+Python 3 with the following packages is required:
 
 ```bash
-pip install torch scipy matplotlib robust_laplacian
-pip install "git+https://github.com/facebookresearch/pytorch3d.git"
+pip install torch numpy scipy matplotlib robust-laplacian
 ```
 
-Download the dataset, extract it to `human_seg/`, and run `main.ipynb`.
+[PyTorch3D](https://github.com/facebookresearch/pytorch3d) is used for OBJ loading. Follow its
+[installation guide](https://github.com/facebookresearch/pytorch3d/blob/main/INSTALL.md) for your CUDA/PyTorch version.
 
+## Dataset
+
+This project uses the preprocessed human segmentation benchmark from [MeshCNN](https://github.com/ranahanocka/MeshCNN)
+([download](https://www.dropbox.com/scl/fi/r04ahap6vhuwzkjj9mpwk/human_seg.tar.gz?rlkey=dyjwx6ehxmarvtrzl6atvs9mz&e=1)). Extract it into the repository root:
+
+```bash
+tar -xzf human_seg.tar.gz   # creates human_seg/{train,test,seg,sseg}
 ```
-├── main.ipynb   # data loading, visualization, Laplace–Beltrami / HKS, model
-├── human_seg/   # dataset (train/, test/, seg/, sseg/), not tracked by git
-└── assets/      # figures used in this README
+
+| Split | Source             | Meshes |
+|-------|--------------------|-------:|
+| Train | MIT animation      | 169    |
+| Train | FAUST              | 100    |
+| Train | SCAPE              | 71     |
+| Train | Adobe              | 41     |
+| Test  | SHREC'07           | 18     |
+
+Labels come as per-edge annotations. Each face gets the majority label of its three edges.
+
+## Usage
+
+**Train** a model from scratch (100 epochs; uses CUDA if available). The checkpoint is written to `model.pt`:
+
+```bash
+cd python_scripts
+python train.py
 ```
+
+**Explore and evaluate** with the notebook. It covers data inspection, eigenvector and HKS visualizations, training curves, per-mesh predictions, the confusion matrix, and per-class IoU:
+
+```bash
+jupyter notebook notebooks/main.ipynb
+```
+
+## Method
+
+![Pipeline](assets/pipeline.png)
+
+1. **Normalization.** Each mesh is centered on its area-weighted centroid and scaled to unit surface area.
+2. **Spectral decomposition.** The 128 smallest eigenpairs of the robust Laplacian
+   ([Sharp & Crane, 2020](https://github.com/nmwsharp/robust-laplacians-py)) are computed, and the constant eigenvector is dropped.
+3. **Heat Kernel Signature.** HKS is evaluated at 16 log-spaced times, chosen from the median spectrum of the training set, then log-scaled and standardized with training-set statistics.
+4. **MiniDiffusionNet.** A linear embedding (width 128) is followed by 4 residual diffusion blocks. Each block:
+   - diffuses features in the spectral domain with a **learned per-channel diffusion time** *t*:
+     `x̃ = Φ · diag(exp(−λ·t)) · Φᵀ M x`
+   - concatenates `[x, x̃]` and applies a two-layer MLP with dropout as a residual update.
+
+   Per-vertex logits are averaged over each face's vertices to give per-face predictions.
+   See [`python_scripts/model.py`](python_scripts/model.py).
+5. **Training.** Cross-entropy loss, AdamW (lr 1e-3, weight decay 1e-4), cosine annealing over 100 epochs, and Gaussian feature noise (σ = 0.05) for augmentation.
+
+## Results
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Face%20Accuracy-88.1%25-2ea44f?style=for-the-badge" alt="Face accuracy 88.1%">
+  <img src="https://img.shields.io/badge/Mean%20IoU-79.9%25-1f6feb?style=for-the-badge" alt="Mean IoU 79.9%">
+  <img src="https://img.shields.io/badge/Test%20Set-SHREC%2707%20%C2%B7%2018%20meshes-6e7781?style=for-the-badge" alt="Test set SHREC'07, 18 meshes">
+</p>
+
+### 🎯 Qualitative results
+
+Each row shows the ground truth, the prediction, and the misclassified faces (in red) for one unseen SHREC'07 mesh.
+
+<p align="center">
+  <img src="assets/predictions/shrec__1_prediction.png" alt="Prediction on SHREC'07 mesh 1" width="100%">
+</p>
+
+<details>
+<summary><b>More examples</b></summary>
+<br>
+<p align="center">
+  <img src="assets/predictions/shrec__10_prediction.png" alt="Prediction on SHREC'07 mesh 10" width="100%">
+  <img src="assets/predictions/shrec__11_prediction.png" alt="Prediction on SHREC'07 mesh 11" width="100%">
+</p>
+</details>
+
+### 📊 Per-class IoU
+
+<div align="center">
+
+| Part | IoU (%) | |
+|:-----|:-------:|:--|
+| ![head](https://img.shields.io/badge/head-CC4D4D?style=flat-square)           | 75.8 | `███████████████░░░░░` |
+| ![hand](https://img.shields.io/badge/hand-4DB34D?style=flat-square)           | 84.7 | `█████████████████░░░` |
+| ![forearm](https://img.shields.io/badge/forearm-4D73E6?style=flat-square)     | 84.0 | `█████████████████░░░` |
+| ![upper arm](https://img.shields.io/badge/upper%20arm-F2BF33?style=flat-square) | 69.6 | `██████████████░░░░░░` |
+| ![torso](https://img.shields.io/badge/torso-B359D9?style=flat-square)         | 82.3 | `████████████████░░░░` |
+| ![thigh](https://img.shields.io/badge/thigh-33CCCC?style=flat-square)         | 75.7 | `███████████████░░░░░` |
+| ![shin](https://img.shields.io/badge/shin-F28C26?style=flat-square)           | 82.5 | `████████████████░░░░` |
+| ![foot](https://img.shields.io/badge/foot-999999?style=flat-square)           | 84.8 | `█████████████████░░░` |
+| **Mean**                                                                      | **79.9** | `████████████████░░░░` |
+
+</div>
+
+The badge colors match the part colors in the figures. Hands, forearms and feet are segmented most reliably. The upper arm is the hardest part, because its boundary with the torso at the shoulder is the least well defined.
+
+### 📈 Training curves
+
+<p align="center">
+  <img src="assets/history.png" alt="Training and test loss/accuracy" width="100%">
+</p>
+
+Test accuracy levels off at about 88% after roughly 15 epochs, while training accuracy keeps climbing to 96.6%. This points to mild overfitting.
+
+### 🔍 Error analysis
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="assets/confusion_matrix.png" alt="Confusion matrix" width="100%">
+    </td>
+    <td width="50%">
+      <p>The confusion matrix is <b>row-normalized and area-weighted</b>. Almost all errors fall at boundaries between parts that touch:</p>
+      <table>
+        <tr><th>True → Predicted</th><th>Joint</th></tr>
+        <tr><td>thigh → torso</td><td>🦵 hip</td></tr>
+        <tr><td>upper arm → torso</td><td>💪 shoulder</td></tr>
+        <tr><td>foot → shin</td><td>🦶 ankle</td></tr>
+        <tr><td>hand → forearm</td><td>✋ wrist</td></tr>
+        <tr><td>head → torso</td><td>🙂 neck</td></tr>
+      </table>
+      <p>These joints have no sharp geometric boundary, so where one part ends and the next begins is partly a labeling convention.</p>
+    </td>
+  </tr>
+</table>
 
 ## References
 
-- N. Sharp, S. Attaiki, K. Crane, M. Ovsjanikov. *DiffusionNet: Discretization Agnostic Learning on Surfaces.* ACM TOG 2022. [code](https://github.com/nmwsharp/diffusion-net)
-- J. Sun, M. Ovsjanikov, L. Guibas. *A Concise and Provably Informative Multi-Scale Signature Based on Heat Diffusion.* SGP 2009.
-- N. Sharp, K. Crane. *A Laplacian for Nonmanifold Triangle Meshes.* SGP 2020. [code](https://github.com/nmwsharp/robust-laplacians-py)
-- R. Hanocka et al. *MeshCNN: A Network with an Edge.* SIGGRAPH 2019. [code](https://github.com/ranahanocka/MeshCNN)
-- H. Maron et al. *Convolutional Neural Networks on Surfaces via Seamless Toric Covers.* SIGGRAPH 2017.
-- N. Ravi et al. *Accelerating 3D Deep Learning with PyTorch3D.* 2020. [code](https://github.com/facebookresearch/pytorch3d)
+- N. Sharp, S. Attaiki, K. Crane, M. Ovsjanikov. *DiffusionNet: Discretization Agnostic Learning on Surfaces.* ACM TOG, 2022. [[code]](https://github.com/nmwsharp/diffusion-net)
+- J. Sun, M. Ovsjanikov, L. Guibas. *A Concise and Provably Informative Multi-Scale Signature Based on Heat Diffusion.* SGP, 2009.
+- N. Sharp, K. Crane. *A Laplacian for Nonmanifold Triangle Meshes.* SGP, 2020. [[code]](https://github.com/nmwsharp/robust-laplacians-py)
+- R. Hanocka et al. *MeshCNN: A Network with an Edge.* SIGGRAPH, 2019. [[code]](https://github.com/ranahanocka/MeshCNN)
+- H. Maron et al. *Convolutional Neural Networks on Surfaces via Seamless Toric Covers.* SIGGRAPH, 2017.
+- N. Ravi et al. *Accelerating 3D Deep Learning with PyTorch3D.* arXiv, 2020. [[code]](https://github.com/facebookresearch/pytorch3d)
 - Datasets: SCAPE (Anguelov et al., 2005), MIT animation (Vlasic et al., 2008), FAUST (Bogo et al., 2014), SHREC'07 (Giorgi et al., 2007).

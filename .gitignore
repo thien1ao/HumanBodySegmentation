@@ -1,3 +1,16 @@
+# Dataset (download separately, see README)
 /human_seg
-.ipynb_checkpoints/
 
+# Jupyter / editor artifacts
+.ipynb_checkpoints/
+.virtual_documents/
+
+# Python
+__pycache__/
+*.pyc
+
+# Third-party meshes (not ours to redistribute)
+*.obj
+
+# Pseudo-labels for new meshes (uncorrected model predictions)
+annotations/
