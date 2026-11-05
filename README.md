@@ -26,29 +26,7 @@ extracted to `human_seg/`.
 
 ![pipeline](assets/pipeline.png)
 
-### MiniDiffusionNet
-
-[DiffusionNet](https://github.com/nmwsharp/diffusion-net) (Sharp et al., 2022) turns heat diffusion into a learnable
-layer: HKS uses **fixed** times, DiffusionNet diffuses learned features with **learned** times. This project uses a
-compact version of it:
-
-Each **DiffusionBlock**:
-
-1. **diffuses** every channel $u$ over the surface for its own learned time $t_c$, computed in the eigenbasis:
-   $`u \mapsto \Phi\, \mathrm{diag}(e^{-\lambda t_c})\, \Phi^{\top} M\, u`$
-   (small $t_c$ = local context, large $t_c$ = whole-body context);
-2. concatenates the input and diffused features and mixes them with a per-vertex **MLP**
-   (256 → 128 → 128, ReLU, dropout 0.3);
-3. adds the result back to the input (**residual** connection).
-
-Unlike the full DiffusionNet, there are no spatial-gradient features; the model only has isotropic diffusion.
-
-**Training:** cross-entropy on face labels, AdamW (lr 1e-3, weight decay 1e-4), cosine schedule over 100 epochs,
-one mesh per step, Gaussian noise (σ = 0.05) on the standardized HKS as augmentation.
-
 ## Results
-
-Evaluated on the 18 SHREC'07 test meshes after 100 epochs.
 
 ![Training curves](assets/history.png)
 
