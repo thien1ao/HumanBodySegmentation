@@ -1,14 +1,30 @@
-# 3D Human Mesh Part Segmentation using DiffusionNet
+# 3D Human Mesh Part Segmentation with Spectral Features and DiffusionNet
 
-## Overview
+Semantic segmentation of human body meshes into 8 parts (head, hand, forearm, upper arm, torso, thigh, shin, foot).
+The network only sees **intrinsic** geometry (Laplace–Beltrami eigenbasis and Heat Kernel Signature), so its
+predictions do not depend on how the mesh is rotated, positioned or posed.
 
-A deep learning pipeline for semantic 3D human mesh segmentation (8 classes) that leverages intrinsic geometric features (Laplace–Beltrami and HKS) to achieve spatial invariance, ensuring robust generalization across diverse poses and datasets.
+**Test results (SHREC'07, unseen during training): 88.1% face accuracy, 79.9% mIoU**, with a 200k-parameter model
+that trains in about 2 minutes on a single GPU.
 
 ![Sample meshes with ground-truth body-part labels](assets/samples.png)
 
+*One mesh from each source dataset, colored by ground-truth part.*
+
+## Contents
+
+- [Dataset](#dataset)
+- [Method](#method)
+- [Results](#results)
+- [Running on your own meshes](#running-on-your-own-meshes)
+- [Getting started](#getting-started)
+- [References](#references)
+
 ## Dataset
 
-The preprocessed human segmentation benchmark from [MeshCNN](https://github.com/ranahanocka/MeshCNN) ([download](https://www.dropbox.com/scl/fi/r04ahap6vhuwzkjj9mpwk/human_seg.tar.gz?rlkey=dyjwx6ehxmarvtrzl6atvs9mz&e=1)), extracted to `human_seg/`.
+The preprocessed human segmentation benchmark from [MeshCNN](https://github.com/ranahanocka/MeshCNN)
+([download](https://www.dropbox.com/scl/fi/r04ahap6vhuwzkjj9mpwk/human_seg.tar.gz?rlkey=dyjwx6ehxmarvtrzl6atvs9mz&e=1)),
+extracted to `human_seg/`.
 
 | Split | Source | Meshes |
 |-------|--------|-------:|
@@ -18,17 +34,19 @@ The preprocessed human segmentation benchmark from [MeshCNN](https://github.com/
 | train | Adobe Fuse | 41 |
 | test  | SHREC'07 (Giorgi et al., 2007) | 18 |
 
-Every mesh has **752 vertices and 1500 triangles**. Labels are given per edge (`seg/*.eseg`, 8 classes: head, hand, forearm, upper arm, torso, thigh, shin, foot) and converted to per-face labels by majority vote over each triangle's three edges. The test set comes from a different source than all training sets, so it measures generalization to unseen subjects.
+Every mesh has about **750 vertices and 1500 triangles**. Labels are given per edge (`seg/*.eseg`) and converted to
+per-face labels by a majority vote over each triangle's three edges. The test set comes from a different source than
+all training sets, so it measures generalization to unseen subjects, proportions and annotation styles.
 
-## Methodology
-
-```
-mesh ──► normalize ──► Laplace–Beltrami ──► eigenbasis ──► HKS ──► DiffusionNet ──► label per face
-```
+## Method
 
 ### Normalization
 
-Each mesh is centered at its area-weighted centroid and scaled to **unit surface area** ($`V \leftarrow V / \sqrt{A}`$). This makes eigenvalues comparable across meshes, so the same diffusion times can be used for all of them.
+Each mesh is centered at its area-weighted centroid and scaled to **unit surface area** ($`V \leftarrow V / \sqrt{A}`$).
+This makes eigenvalues comparable across meshes, so the same diffusion times can be used for all of them.
+
+For the figures, meshes are additionally rotated upright using the ground-truth part centers. This rotation has no
+effect on the model's input, because every feature below is intrinsic.
 
 ### Laplace–Beltrami operator
 
@@ -43,10 +61,11 @@ The **Laplace–Beltrami operator** is the same idea on a curved surface. On a t
 where $\alpha_{ij}, \beta_{ij}$ are the two angles opposite the edge $(i,j)$. Each vertex also gets a **mass**
 $M_i$ equal to one third of the area of its adjacent triangles (lumped mass matrix).
 
-Only angles and areas appear, so $L$ is invariant to rotation and translation, and it barely changes when the body bends, because bending hardly stretches the surface.
+Only angles and areas appear, so $L$ is invariant to rotation and translation, and it barely changes when the body
+bends, because bending hardly stretches the surface.
 
-We build $L$ and $M$ with [`robust_laplacian`](https://github.com/nmwsharp/robust-laplacians-py), which implements
-exactly this discretization and also stays well-behaved on degenerate triangles.
+$L$ and $M$ are built with [`robust_laplacian`](https://github.com/nmwsharp/robust-laplacians-py), which implements
+this discretization and stays well-behaved on degenerate triangles.
 
 ### Eigenfunctions
 
@@ -56,13 +75,13 @@ Solving the generalized eigenproblem
 L\,\phi_k = \lambda_k\, M\,\phi_k, \qquad 0 = \lambda_0 \le \lambda_1 \le \dots
 ```
 
-gives the mesh's spectral basis, a Fourier basis for the surface: low eigenvalues describe large-scale patterns, while high eigenvalues capture finer details.
+gives the mesh's spectral basis, a Fourier basis for the surface: low eigenvalues describe large-scale patterns,
+high eigenvalues capture finer detail.
 
-We compute the first **128** eigenpairs with `scipy.sparse.linalg.eigsh` in shift-invert mode and discard the constant eigenfunction $\phi_0$.
+The first **128** eigenpairs are computed with `scipy.sparse.linalg.eigsh` in shift-invert mode, and the constant
+eigenfunction $\phi_0$ is discarded.
 
-![Laplace–Beltrami eigenfunctions on a body mesh](assets/laplace.png)
-
-*Eigenfunctions on one mesh (red = positive, blue = negative): $\phi_1$ runs from head to feet, $\phi_2$ separates the legs, higher modes capture finer detail.*
+![Laplace–Beltrami eigenfunctions on a body mesh](assets/eigenvectors.png)
 
 ### Heat Kernel Signature
 
@@ -79,37 +98,99 @@ Using the eigenbasis this has a closed form:
 \mathrm{HKS}(x, t) = \sum_k e^{-\lambda_k t}\, \phi_k(x)^2
 ```
 
-Because only $\phi_k^2$ appears, the arbitrary sign of each eigenfunction doesn't matter. 
+Because only $\phi_k^2$ appears, the arbitrary sign of each eigenfunction doesn't matter.
 
-We evaluate it at **16 logarithmically spaced times** $`t \in [0.01, 1]`$. Since every mesh has unit area, the same times
-are used for all meshes, so channel $j$ means the same thing on every body. Each time slice is normalized by the heat trace
-$\sum_k e^{-\lambda_k t}$ (the "scaled HKS") and log-transformed, so all 16 channels live on a similar numeric scale:
+The signature is evaluated at **16 logarithmically spaced times**. The range is derived from the training spectrum,
+$`t \in [\,4\ln 10/\lambda_{K},\; 4\ln 10/\lambda_1\,]`$ with median eigenvalues over the training meshes, which gives
+$`t \approx 0.0073 \dots 1.42`$. Because every mesh has unit area, the same times are used for all meshes, so channel
+$j$ means the same thing on every body. Each time slice is normalized by the heat trace and log-transformed, so all
+channels live on a similar numeric scale:
 
 ```math
 \widetilde{\mathrm{HKS}}(x,t) = \log \frac{\mathrm{HKS}(x,t)}{\sum_k e^{-\lambda_k t}}
 ```
 
-The result is a **16-dimensional descriptor per vertex** that is rotation-invariant and almost pose-invariant.
-This is the input of our network.
+Finally each channel is standardized with the mean and standard deviation of the training set. The result is a
+**16-dimensional descriptor per vertex** that is rotation-invariant and almost pose-invariant.
 
 ![Heat Kernel Signature at increasing time scales](assets/hks.png)
 
-*HKS at increasing $t$ (bright = more heat retained): hands, feet and head stand out at small $t$; at large $t$ the signature encodes distance from the body's center.*
+### MiniDiffusionNet
 
-### DiffusionNet
+[DiffusionNet](https://github.com/nmwsharp/diffusion-net) (Sharp et al., 2022) turns heat diffusion into a learnable
+layer: HKS uses **fixed** times, DiffusionNet diffuses learned features with **learned** times. This project uses a
+compact version of it:
 
-DiffusionNet (Sharp et al., 2022) turns heat diffusion into a learnable layer. HKS uses **fixed** times; DiffusionNet
-diffuses learned features with **learned** times. The network is a stack of blocks, each of which:
+Each **DiffusionBlock**:
 
-1. **diffuses** every feature channel $u$ over the surface for its own learned time $t$, computed cheaply in the
-   eigenbasis: $`u \mapsto \Phi\, \mathrm{diag}(e^{-\lambda t})\, \Phi^{\top} M\, u`$
-   (small $t$ = local context, large $t$ = whole-body context);
-2. computes **spatial gradient features**: inner products of surface gradients, which add a sense of direction
-   (along a limb vs. across it) while staying rotation-invariant;
-3. mixes the input, diffused and gradient features with a per-vertex **MLP** and a residual connection.
+1. **diffuses** every channel $u$ over the surface for its own learned time $t_c$, computed in the eigenbasis:
+   $`u \mapsto \Phi\, \mathrm{diag}(e^{-\lambda t_c})\, \Phi^{\top} M\, u`$
+   (small $t_c$ = local context, large $t_c$ = whole-body context);
+2. concatenates the input and diffused features and mixes them with a per-vertex **MLP**
+   (256 → 128 → 128, ReLU, dropout 0.3);
+3. adds the result back to the input (**residual** connection).
 
-The network takes the per-vertex HKS as input and outputs 8 class scores per vertex. These are averaged over the three
-vertices of each triangle to give one prediction per face, trained with cross-entropy against the face labels.
+Unlike the full DiffusionNet, there are no spatial-gradient features; the model only has isotropic diffusion.
+
+**Training:** cross-entropy on face labels, AdamW (lr 1e-3, weight decay 1e-4), cosine schedule over 100 epochs,
+one mesh per step, Gaussian noise (σ = 0.05) on the standardized HKS as augmentation.
+
+## Results
+
+Evaluated on the 18 SHREC'07 test meshes after 100 epochs.
+
+| | |
+|---|---:|
+| Face accuracy | **88.1%** |
+| Mean IoU (area-weighted) | **79.9%** |
+| Best / worst mesh | 94.8% (`shrec__14`) / 65.9% (`shrec__6`) |
+
+| Class | head | hand | forearm | upper arm | torso | thigh | shin | foot |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| IoU | 0.758 | 0.847 | 0.840 | 0.696 | 0.823 | 0.757 | 0.825 | 0.848 |
+
+![Confusion matrix](assets/confusion_matrix.png)
+
+*Row-normalized, area-weighted confusion matrix. Almost all errors are between parts that touch:
+thigh → torso (hip), upper arm → torso (shoulder), foot → shin (ankle), hand → forearm (wrist), head → torso (neck).*
+
+![Training curves](assets/history.png)
+
+*Training and test loss/accuracy. Test accuracy plateaus around 88% after ~15 epochs while training accuracy keeps
+rising to 96.6%, so the model overfits slightly; longer training does not help.*
+
+**Error analysis.**
+
+- **Part boundaries are the main source of error.** Faces that share an edge with another part are 17% of the test
+  faces and are classified correctly only 68% of the time, against 92% for interior faces. Part boundaries are
+  annotated by hand and SHREC'07 places some of them (hip, neck) differently from the training sets, so part of this
+  error is a difference in labelling convention rather than in shape.
+- **A few meshes account for much of the remaining error.** `shrec__6`, `shrec__11` and `shrec__12` are the three
+  worst meshes (66–80%).
+- **Some mistakes are not near a boundary**, e.g. head predicted as upper arm on some meshes. Here the intrinsic
+  features alone are not enough to tell the parts apart.
+
+## Running on your own meshes
+
+The model works on any `.obj` file, without labels. Pose and orientation don't matter.
+
+```bash
+# segment a mesh and show it (--up only changes how it is drawn)
+python python_scripts/predict.py my_mesh.obj --up z --save assets/my_mesh.png --labels my_mesh_faces.txt
+
+# write annotation files in the dataset format (.eseg / .seseg) from the predictions
+python python_scripts/annotate.py my_mesh.obj --out annotations
+```
+
+The mesh should be a single connected human-like body; separate pieces (eyes, clothing, props) break the spectral
+features. Any scale works; meshes with roughly 500–20k vertices run fast.
+
+![Prediction on a stylized creature mesh](assets/diablo.png)
+
+*Out-of-distribution example (`diablo3_pose.obj`, 2.5k vertices): arms (upper arm → forearm → hand) and legs
+(thigh → shin → foot) are segmented in the right order, but the horned head is mostly labelled torso, and the tail,
+which has no class, gets a mix of arm labels. The files `annotate.py` writes are predictions (pseudo-labels), not
+ground truth, and should be corrected before training or evaluating on them.*
 
 ## Getting started
 
@@ -118,12 +199,31 @@ pip install torch scipy matplotlib robust_laplacian
 pip install "git+https://github.com/facebookresearch/pytorch3d.git"
 ```
 
-Download the dataset, extract it to `human_seg/`, and run `main.ipynb`.
+Download the dataset and extract it to `human_seg/`, then:
+
+```bash
+python python_scripts/train.py     # preprocess, train for 100 epochs, save model.pt (~2 min on a GPU)
+```
+
+`model.pt` stores the weights together with the HKS times and normalization statistics, which `predict.py` and
+`annotate.py` need to process new meshes.
 
 ```
-├── main.ipynb   # data loading, visualization, Laplace–Beltrami / HKS, model
-├── human_seg/   # dataset (train/, test/, seg/, sseg/), not tracked by git
-└── assets/      # figures used in this README
+├── python_scripts/
+│   ├── data.py        # paths, mesh loading, edge → face labels, alignment
+│   ├── features.py    # Laplace–Beltrami eigenbasis, HKS, normalization
+│   ├── model.py       # MiniDiffusionNet
+│   ├── train.py       # training loop; run to train and save model.pt
+│   ├── evaluate.py    # predictions, confusion matrix, IoU
+│   ├── plotting.py    # all figures
+│   ├── predict.py     # segment any .obj with the trained model
+│   └── annotate.py    # write .eseg / .seseg annotation files from predictions
+├── notebooks/
+│   └── main.ipynb     # exploration notebook: data, spectra, HKS, training, analysis
+├── annotations/       # generated annotation files for new meshes
+├── assets/            # figures used in this README
+├── human_seg/         # dataset (train/, test/, seg/, sseg/), not tracked by git
+└── model.pt           # trained model
 ```
 
 ## References
