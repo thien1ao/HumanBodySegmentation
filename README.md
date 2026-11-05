@@ -31,65 +31,18 @@ HumanBodySegmentation/
 └── model.pt           # Trained model
 ```
 
-## Methodology
+## Pipeline
 
 ![pipeline](assets/pipeline.png)
 
-### MiniDiffusionNet
-
-```python
-import torch
-import torch.nn as nn
-
-
-class SpectralDiffusion(nn.Module):
-    def __init__(self, channels):
-        super().__init__()
-        self.t = nn.Parameter(torch.zeros(channels))
-
-    def forward(self, x, evals, evecs, mass):
-        coefs = evecs.T @ (mass[:, None] * x)
-        decay = torch.exp(-evals[:, None] * self.t.abs()[None, :])
-        return evecs @ (decay * coefs)
-
-
-class DiffusionBlock(nn.Module):
-    def __init__(self, channels, dropout=0.3):
-        super().__init__()
-        self.diffusion = SpectralDiffusion(channels)
-        self.mlp = nn.Sequential(
-            nn.Linear(2 * channels, channels),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(channels, channels),
-        )
-
-    def forward(self, x, evals, evecs, mass):
-        x_diffused = self.diffusion(x, evals, evecs, mass)
-        return x + self.mlp(torch.cat([x, x_diffused], dim=-1))
-
-
-class MiniDiffusionNet(nn.Module):
-    def __init__(self, in_ch, num_classes, width=128, n_blocks=4, dropout=0.3):
-        super().__init__()
-        self.inp = nn.Linear(in_ch, width)
-        self.blocks = nn.ModuleList(
-            DiffusionBlock(width, dropout)
-            for _ in range(n_blocks)
-        )
-        self.out = nn.Linear(width, num_classes)
-
-    def forward(self, x, evals, evecs, mass, faces):
-        h = self.inp(x)
-
-        for blk in self.blocks:
-            h = blk(h, evals, evecs, mass)
-
-        vertex_logits = self.out(h)
-        return vertex_logits[faces].mean(1)
-```
 
 ## Results
+
+### Predictions
+
+<img src="assets/predictions/shrec__10_prediction.png" alt="preditiction_10">
+<img src="assets/predictions/shrec__1_prediction.png" alt="preditiction_1">
+<img src="assets/predictions/shrec__11_prediction.png" alt="preditiction_11">
 
 ### Training performance
 
@@ -104,21 +57,5 @@ rising to 96.6%, so the model overfits slightly.*
 
 *Row-normalized, area-weighted confusion matrix. Almost all errors are between parts that touch:
 thigh → torso (hip), upper arm → torso (shoulder), foot → shin (ankle), hand → forearm (wrist), head → torso (neck).*
-
-### Predictions
-
-<img src="assets/predictions/shrec__10_prediction.png" alt="preditiction_10">
-<img src="assets/predictions/shrec__1_prediction.png" alt="preditiction_1">
-<img src="assets/predictions/shrec__11_prediction.png" alt="preditiction_11">
-
-## References
-
-- N. Sharp, S. Attaiki, K. Crane, M. Ovsjanikov. *DiffusionNet: Discretization Agnostic Learning on Surfaces.* ACM TOG 2022. [code](https://github.com/nmwsharp/diffusion-net)
-- J. Sun, M. Ovsjanikov, L. Guibas. *A Concise and Provably Informative Multi-Scale Signature Based on Heat Diffusion.* SGP 2009.
-- N. Sharp, K. Crane. *A Laplacian for Nonmanifold Triangle Meshes.* SGP 2020. [code](https://github.com/nmwsharp/robust-laplacians-py)
-- R. Hanocka et al. *MeshCNN: A Network with an Edge.* SIGGRAPH 2019. [code](https://github.com/ranahanocka/MeshCNN)
-- H. Maron et al. *Convolutional Neural Networks on Surfaces via Seamless Toric Covers.* SIGGRAPH 2017.
-- N. Ravi et al. *Accelerating 3D Deep Learning with PyTorch3D.* 2020. [code](https://github.com/facebookresearch/pytorch3d)
-- Datasets: SCAPE (Anguelov et al., 2005), MIT animation (Vlasic et al., 2008), FAUST (Bogo et al., 2014), SHREC'07 (Giorgi et al., 2007).
 
 
