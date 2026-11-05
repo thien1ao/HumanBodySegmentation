@@ -109,6 +109,8 @@ thigh → torso (hip), upper arm → torso (shoulder), foot → shin (ankle), ha
 ### Predictions
 
 <img src="assets/predictions/shrec__10_prediction.png" alt="preditiction_10">
+<img src="assets/predictions/shrec__1_prediction.png" alt="preditiction_1">
+<img src="assets/predictions/shrec__11_prediction.png" alt="preditiction_11">
 
 ## References
 
