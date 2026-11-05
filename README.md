@@ -8,19 +8,25 @@ predictions do not depend on how the mesh is oriented.
 
 ![Sample meshes with ground-truth body-part labels](assets/samples.png)
 
-## Dataset
-
+## Overview
 The preprocessed human segmentation benchmark from [MeshCNN](https://github.com/ranahanocka/MeshCNN)
 ([download](https://www.dropbox.com/scl/fi/r04ahap6vhuwzkjj9mpwk/human_seg.tar.gz?rlkey=dyjwx6ehxmarvtrzl6atvs9mz&e=1)),
 extracted to `human_seg/`.
 
-| Split | Source | Meshes |
-|-------|--------|-------:|
-| train | MIT animation (Vlasic et al., 2008) | 169 |
-| train | FAUST (Bogo et al., 2014) | 100 |
-| train | SCAPE (Anguelov et al., 2005) | 71 |
-| train | Adobe Fuse | 41 |
-| test  | SHREC'07 (Giorgi et al., 2007) | 18 |
+```
+├── python_scripts/
+│   ├── data.py        # paths, mesh loading, edge → face labels, alignment
+│   ├── features.py    # Laplace–Beltrami eigenbasis, HKS, normalization
+│   ├── model.py       # MiniDiffusionNet
+│   ├── train.py       # training loop
+│   ├── evaluate.py    # confusion matrix
+│   ├── plotting.py    # all figures
+├── notebooks/
+│   └── main.ipynb     # exploration notebook
+├── assets/             
+├── human_seg/         
+└── model.pt           # trained model
+
 
 ## Methodology
 
@@ -38,38 +44,7 @@ rising to 96.6%, so the model overfits slightly.*
 *Row-normalized, area-weighted confusion matrix. Almost all errors are between parts that touch:
 thigh → torso (hip), upper arm → torso (shoulder), foot → shin (ankle), hand → forearm (wrist), head → torso (neck).*
 
-## Getting started
 
-```bash
-pip install torch scipy matplotlib robust_laplacian
-pip install "git+https://github.com/facebookresearch/pytorch3d.git"
-```
-
-Download the dataset and extract it to `human_seg/`, then:
-
-```bash
-python python_scripts/train.py     # preprocess, train for 100 epochs, save model.pt (~2 min on a GPU)
-```
-
-`model.pt` stores the weights together with the HKS times and normalization statistics, which `predict.py` and
-`annotate.py` need to process new meshes.
-
-```
-├── python_scripts/
-│   ├── data.py        # paths, mesh loading, edge → face labels, alignment
-│   ├── features.py    # Laplace–Beltrami eigenbasis, HKS, normalization
-│   ├── model.py       # MiniDiffusionNet
-│   ├── train.py       # training loop; run to train and save model.pt
-│   ├── evaluate.py    # predictions, confusion matrix, IoU
-│   ├── plotting.py    # all figures
-│   ├── predict.py     # segment any .obj with the trained model
-│   └── annotate.py    # write .eseg / .seseg annotation files from predictions
-├── notebooks/
-│   └── main.ipynb     # exploration notebook: data, spectra, HKS, training, analysis
-├── annotations/       # generated annotation files for new meshes
-├── assets/            # figures used in this README
-├── human_seg/         # dataset (train/, test/, seg/, sseg/), not tracked by git
-└── model.pt           # trained model
 ```
 
 ## References
