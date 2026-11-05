@@ -70,8 +70,7 @@ class DiffusionBlock(nn.Module):
 
 
 class MiniDiffusionNet(nn.Module):
-    def __init__(self, in_ch, num_classes,
-                 width=128, n_blocks=4, dropout=0.3):
+    def __init__(self, in_ch, num_classes, width=128, n_blocks=4, dropout=0.3):
         super().__init__()
         self.inp = nn.Linear(in_ch, width)
         self.blocks = nn.ModuleList(
