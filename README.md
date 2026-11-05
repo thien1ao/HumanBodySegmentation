@@ -9,17 +9,6 @@ that trains in about 2 minutes on a single GPU.
 
 ![Sample meshes with ground-truth body-part labels](assets/samples.png)
 
-*One mesh from each source dataset, colored by ground-truth part.*
-
-## Contents
-
-- [Dataset](#dataset)
-- [Method](#method)
-- [Results](#results)
-- [Running on your own meshes](#running-on-your-own-meshes)
-- [Getting started](#getting-started)
-- [References](#references)
-
 ## Dataset
 
 The preprocessed human segmentation benchmark from [MeshCNN](https://github.com/ranahanocka/MeshCNN)
