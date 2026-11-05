@@ -128,7 +128,6 @@ Evaluated on the 18 SHREC'07 test meshes after 100 epochs.
 |---|---:|
 | Face accuracy | **88.1%** |
 | Mean IoU (area-weighted) | **79.9%** |
-| Best / worst mesh | 94.8% (`shrec__14`) / 65.9% (`shrec__6`) |
 
 | Class | head | hand | forearm | upper arm | torso | thigh | shin | foot |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -142,18 +141,7 @@ thigh → torso (hip), upper arm → torso (shoulder), foot → shin (ankle), ha
 ![Training curves](assets/history.png)
 
 *Training and test loss/accuracy. Test accuracy plateaus around 88% after ~15 epochs while training accuracy keeps
-rising to 96.6%, so the model overfits slightly; longer training does not help.*
-
-**Error analysis.**
-
-- **Part boundaries are the main source of error.** Faces that share an edge with another part are 17% of the test
-  faces and are classified correctly only 68% of the time, against 92% for interior faces. Part boundaries are
-  annotated by hand and SHREC'07 places some of them (hip, neck) differently from the training sets, so part of this
-  error is a difference in labelling convention rather than in shape.
-- **A few meshes account for much of the remaining error.** `shrec__6`, `shrec__11` and `shrec__12` are the three
-  worst meshes (66–80%).
-- **Some mistakes are not near a boundary**, e.g. head predicted as upper arm on some meshes. Here the intrinsic
-  features alone are not enough to tell the parts apart.
+rising to 96.6%, so the model overfits slightly.*
 
 ## Getting started
 
