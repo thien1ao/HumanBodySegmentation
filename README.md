@@ -25,6 +25,8 @@ extracted to `human_seg/`.
 
 ## Methodology
 
+![pipeline](assets/pipeline.png)
+
 ### MiniDiffusionNet
 
 [DiffusionNet](https://github.com/nmwsharp/diffusion-net) (Sharp et al., 2022) turns heat diffusion into a learnable
