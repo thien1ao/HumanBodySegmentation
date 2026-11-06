@@ -1,8 +1,6 @@
 # Human Body Mesh Segmentation using DiffusionNet
 
-Semantic segmentation of 3D human body meshes into eight anatomical parts: **head, hand, forearm, upper arm, torso, thigh, shin, foot**.
-
-The network only sees **intrinsic** geometry: the Laplace–Beltrami eigenbasis and the Heat Kernel Signature (HKS). Because of this, its predictions do not depend on how the mesh is oriented or positioned in space.
+A geometric deep leatning model for segmentimg 3D human body meshes into 8 semantic parts, achieving 88.1% accuracy on the SCHREC'07 benchmark.
 
 <p align="center">
   <img src="assets/samples.png" alt="Ground-truth segmentations from the training set" height="600">
@@ -65,17 +63,9 @@ tar -xzf human_seg.tar.gz
 
 <div align="center">
 
-| Part | IoU (%) | |
-|:-----|:-------:|:--|
-| ![head](https://img.shields.io/badge/head-CC4D4D?style=flat-square)           | 75.8 | `███████████████░░░░░` |
-| ![hand](https://img.shields.io/badge/hand-4DB34D?style=flat-square)           | 84.7 | `█████████████████░░░` |
-| ![forearm](https://img.shields.io/badge/forearm-4D73E6?style=flat-square)     | 84.0 | `█████████████████░░░` |
-| ![upper arm](https://img.shields.io/badge/upper%20arm-F2BF33?style=flat-square) | 69.6 | `██████████████░░░░░░` |
-| ![torso](https://img.shields.io/badge/torso-B359D9?style=flat-square)         | 82.3 | `████████████████░░░░` |
-| ![thigh](https://img.shields.io/badge/thigh-33CCCC?style=flat-square)         | 75.7 | `███████████████░░░░░` |
-| ![shin](https://img.shields.io/badge/shin-F28C26?style=flat-square)           | 82.5 | `████████████████░░░░` |
-| ![foot](https://img.shields.io/badge/foot-999999?style=flat-square)           | 84.8 | `█████████████████░░░` |
-| **Mean**                                                                      | **79.9** | `████████████████░░░░` |
+| <img src="https://img.shields.io/badge/Head-CC4D4D?style=flat-square"> | <img src="https://img.shields.io/badge/Hand-4DB34D?style=flat-square"> | <img src="https://img.shields.io/badge/Forearm-4D73E6?style=flat-square"> | <img src="https://img.shields.io/badge/Upper%20Arm-F2BF33?style=flat-square"> | <img src="https://img.shields.io/badge/Torso-B359D9?style=flat-square"> | <img src="https://img.shields.io/badge/Thigh-33CCCC?style=flat-square"> | <img src="https://img.shields.io/badge/Shin-F28C26?style=flat-square"> | <img src="https://img.shields.io/badge/Foot-999999?style=flat-square"> | **Mean** |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| 75.8 | 84.7 | 84.0 | 69.6 | 82.3 | 75.7 | 82.5 | 84.8 | **79.9** |
 
 </div>
 
