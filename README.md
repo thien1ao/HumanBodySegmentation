@@ -61,7 +61,7 @@ tar -xzf human_seg.tar.gz
 </p>
 </details>
 
-### 📊 Per-class IoU
+### Per-class IoU
 
 <div align="center">
 
