@@ -34,15 +34,6 @@ This project uses the preprocessed human segmentation benchmark from [MeshCNN](h
 ```bash
 tar -xzf human_seg.tar.gz 
 ```
-
-| Split | Source             | Meshes |
-|-------|--------------------|-------:|
-| Train | MIT animation      | 169    |
-| Train | FAUST              | 100    |
-| Train | SCAPE              | 71     |
-| Train | Adobe              | 41     |
-| Test  | SHREC'07           | 18     |
-
 ## Methodology
 
 ![Pipeline](assets/pipeline.png)
