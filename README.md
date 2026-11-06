@@ -5,7 +5,7 @@
 </p>
 
 ## Abstract
-Inspired by MeshCNN, this project uses a DiffusionNet-like architecture for 8-part human body segmentation on 3D meshes. By leveraging Heat Kernel Signature features and spectral heat diffusion, the model achieves 88.1% face accuracy and 79.9% mean IoU on the SHREC'07 benchmark.
+Inspired by MeshCNN, this project uses a DiffusionNet-like architecture for 8-part human body segmentation on 3D meshes. By leveraging Heat Kernel Signature features and Laplace-Bertrami operator, the model achieves 88.1% face accuracy and 79.9% mean IoU on the SHREC'07 benchmark.
 
 ## Repository Structure
 
