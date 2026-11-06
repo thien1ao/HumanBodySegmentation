@@ -1,4 +1,4 @@
-# Human Body Mesh Segmentation with Spectral Features and DiffusionNet
+# Human Body Mesh Segmentation using DiffusionNet
 
 Semantic segmentation of 3D human body meshes into eight anatomical parts: **head, hand, forearm, upper arm, torso, thigh, shin, foot**.
 
