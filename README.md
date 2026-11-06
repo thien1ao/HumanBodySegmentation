@@ -1,37 +1,35 @@
 # Human Body Mesh Segmentation using DiffusionNet
 
-A geometric deep leatning model for segmentimg 3D human body meshes into 8 semantic parts, achieving 88.1% accuracy on the SHREC'07 dataset.
-
 <p align="center">
   <img src="assets/samples.png" alt="Ground-truth segmentations from the training set" height="600">
 </p>
+
+## Abstract
+Inspired by MeshCNN, this project uses a DiffusionNet-like architecture for 8-part human body segmentation on 3D meshes. By leveraging Heat Kernel Signature features and spectral heat diffusion, the model achieves 88.1% face accuracy and 79.9% mean IoU on the SHREC'07 benchmark.
 
 ## Repository Structure
 
 ```
 HumanBodySegmentation/
 ├── python_scripts/
-│   ├── data.py        # Mesh loading, normalization, edge-to-face labels, alignment
-│   ├── features.py    # Laplace–Beltrami spectrum and Heat Kernel Signature
-│   ├── model.py       # MiniDiffusionNet architecture
-│   ├── train.py       # Training loop and checkpointing (entry point)
-│   ├── evaluate.py    # Inference, confusion matrix, IoU
-│   └── plotting.py    # Visualization utilities
+│   ├── data.py        <- Mesh loading, normalization, edge-to-face labels
+│   ├── features.py    <- Laplace–Beltrami operatir and Heat Kernel Signature
+│   ├── model.py       <- main model
+│   ├── train.py       <- Training loop 
+│   ├── evaluate.py    <- Confusion matrix, IoU
+│   └── plotting.py    <- Visualization utilities
 ├── notebooks/
-│   └── main.ipynb     # End-to-end walkthrough: data, features, training, evaluation
-├── assets/            # Figures used in this README
-├── human_seg/         # Dataset (download separately, see below)
-└── model.pt           # Trained checkpoint
+│   └── main.ipynb     <- End-to-end pipeline
+├── assets/            <- assets for README
+├── human_seg/         <- Data
+└── model.pt           <- trained model
 ```
 
 ## Dataset
 
 This project uses the preprocessed human segmentation benchmark from [MeshCNN](https://github.com/ranahanocka/MeshCNN)
-([download](https://www.dropbox.com/scl/fi/r04ahap6vhuwzkjj9mpwk/human_seg.tar.gz?rlkey=dyjwx6ehxmarvtrzl6atvs9mz&e=1)). Extract it into the repository root:
+([download](https://www.dropbox.com/scl/fi/r04ahap6vhuwzkjj9mpwk/human_seg.tar.gz?rlkey=dyjwx6ehxmarvtrzl6atvs9mz&e=1)).
 
-```bash
-tar -xzf human_seg.tar.gz 
-```
 ## Methodology
 
 ![Pipeline](assets/pipeline.png)
