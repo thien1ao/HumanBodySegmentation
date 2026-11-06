@@ -75,7 +75,7 @@ tar -xzf human_seg.tar.gz
   <img src="assets/history.png" alt="Training and test loss/accuracy" width="100%">
 </p>
 
-Test accuracy levels off at about 88% after roughly 15 epochs, while training accuracy keeps climbing to 96.6%. This points to mild overfitting.
+
 
 ### Error analysis
 
