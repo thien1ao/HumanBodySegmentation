@@ -1,6 +1,6 @@
 # Human Body Mesh Segmentation using DiffusionNet
 
-A geometric deep leatning model for segmentimg 3D human body meshes into 8 semantic parts, achieving 88.1% accuracy on the SCHREC'07 benchmark.
+A geometric deep leatning model for segmentimg 3D human body meshes into 8 semantic parts, achieving 88.1% accuracy on the SHREC'07 dataset.
 
 <p align="center">
   <img src="assets/samples.png" alt="Ground-truth segmentations from the training set" height="600">
